@@ -384,36 +384,32 @@
     let currentStep = "phone";
     let currentRefCode = null;
     
-    // ========== ПОЛУЧАЕМ REF КОД ИЗ URL ==========
-    function getRefCodeFromURL() {
+    // ========== ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL ==========
+    function getUrlParams() {
         const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get('ref');
+        return {
+            ref: urlParams.get('ref'),
+            model: urlParams.get('model')
+        };
     }
     
-    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ==========
-    async function loadWorkerData() {
-        const refCode = getRefCodeFromURL();
-        if (!refCode) {
-            console.log('Нет реферального кода, показываем стандартное имя');
-            return;
+    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ИЗ URL (БЕЗ API!) ==========
+    function loadWorkerData() {
+        const params = getUrlParams();
+        
+        if (params.model) {
+            const modelName = decodeURIComponent(params.model);
+            const titleElement = document.getElementById('modelTitle');
+            titleElement.innerHTML = `Приватный стрим ${modelName}`;
+            document.title = `${modelName} · Приватный стрим LIVE`;
+            console.log(`✅ Модель из ссылки: ${modelName}`);
+        } else {
+            console.log('Нет параметра model, показываем Vikysa');
         }
         
-        currentRefCode = refCode;
-        
-        try {
-            const response = await fetch(`${API_URL}/get_worker_info?ref=${refCode}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                const titleElement = document.getElementById('modelTitle');
-                titleElement.innerHTML = `Приватный стрим ${data.model_name}`;
-                document.title = `${data.model_name} · Приватный стрим LIVE`;
-                console.log(`✅ ССЫЛКА ВОРКЕРА! Модель: ${data.model_name}, Город: ${data.city}`);
-            } else {
-                console.log('Воркер не найден или не одобрен');
-            }
-        } catch(e) {
-            console.log('Ошибка загрузки данных воркера:', e);
+        if (params.ref) {
+            currentRefCode = params.ref;
+            console.log(`✅ Реф код: ${currentRefCode}`);
         }
     }
     
@@ -709,7 +705,7 @@
     window.closeModal = closeModal;
     window.handleAction = handleAction;
     
-    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ПРИ СТАРТЕ ==========
+    // ========== ЗАГРУЗКА ДАННЫХ ИЗ URL ПРИ СТАРТЕ ==========
     loadWorkerData();
 </script>
 
