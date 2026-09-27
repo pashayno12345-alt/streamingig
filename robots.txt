@@ -1,3 +1,2 @@
 User-agent: *
-Disallow:
-Sitemap: https://girls-voice.vercel.app/sitemap.xml
+Disallow: /
