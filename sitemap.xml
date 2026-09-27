@@ -6,6 +6,21 @@
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
-  <!-- Добавь другие страницы если есть -->
-  <!-- <url><loc>https://girls-voice.vercel.app/about</loc></url> -->
+  
+  <!-- Пример, если у тебя есть другие страницы -->
+  <!--
+  <url>
+    <loc>https://girls-voice.vercel.app/about</loc>
+    <lastmod>2024-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  
+  <url>
+    <loc>https://girls-voice.vercel.app/contact</loc>
+    <lastmod>2024-01-15</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  -->
 </urlset>
