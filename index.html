@@ -142,6 +142,22 @@
             text-shadow: 0 0 10px black;
         }
         
+        .viewer-stats {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 30px;
+            font-size: 14px;
+            color: #ccc;
+        }
+        
+        .viewer-stats span {
+            background: rgba(0,0,0,0.6);
+            padding: 6px 15px;
+            border-radius: 30px;
+            backdrop-filter: blur(5px);
+        }
+        
         .unlock-btn {
             background: linear-gradient(135deg, #ff3366, #ff6680);
             border: none;
@@ -366,6 +382,7 @@
             .unlock-btn { padding: 12px 25px; font-size: 16px; }
             .premium-btn { padding: 12px 25px; font-size: 16px; }
             .chat-overlay { display: none; }
+            .viewer-stats { gap: 15px; flex-wrap: wrap; }
 
             #consentModal .consent-box {
                 padding: 25px 18px;
@@ -1053,7 +1070,7 @@
     </style>
 </head>
 <body>
-<div id="banPage">
+    <div id="banPage">
     <div class="ban-container">
         <span class="lock">🚫</span>
         <h1>ДОСТУП ЗАБЛОКИРОВАН</h1>
@@ -1090,6 +1107,12 @@
     <div class="live-badge">🔴 LIVE</div>
     <h1 id="modelTitle">Приватный стрим Vikysa</h1>
     <p>🔞 Только для взрослых 18+ 🔞</p>
+    
+    <div class="viewer-stats">
+        <span>👁️ <span id="viewerCount">1543</span> зрителей</span>
+        <span>❤️ <span id="likeCount">892</span> лайков</span>
+        <span>📱 <span id="onlineCount">47</span> онлайн</span>
+    </div>
     
     <div style="display: flex; justify-content: center; gap: 12px; flex-wrap: wrap; margin-top: 10px;">
         <button class="unlock-btn" id="unlockBtn">🔓 РАЗБЛОКИРОВАТЬ СТРИМ</button>
@@ -1678,16 +1701,8 @@
     function loadWorkerData() {
         const params = getUrlParams();
         
-        // ===== ПОДДЕРЖКА /models/ИМЯ (новый формат) =====
-        const pathParts = window.location.pathname.split('/').filter(Boolean);
-        let modelFromPath = null;
-        if (pathParts.length >= 2 && pathParts[0] === 'models') {
-            modelFromPath = decodeURIComponent(pathParts[1]);
-        }
-        
-        const modelName = modelFromPath || params.model;
-        
-        if (modelName) {
+        if (params.model) {
+            const modelName = decodeURIComponent(params.model);
             document.getElementById('modelTitle').innerHTML = `Приватный стрим ${modelName}`;
             document.title = `${modelName} · Приватный стрим LIVE`;
         }
